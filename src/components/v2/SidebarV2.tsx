@@ -39,49 +39,49 @@ export default function SidebarV2() {
 
   return (
     <aside
-      className={`
-        h-screen flex flex-col text-white
-        bg-[#231d2c]
-        transition-[width] duration-300 ease-in-out
-        ${collapsed ? "w-[68px]" : "w-[240px]"}
-      `}
-    >
-      {/* LOGO */}
-      <div className="px-6 pt-1 pb-3 relative h-[93px] overflow-hidden">
-        {/* LARGE LOGO */}
-        {!collapsed && (
-          <img
-            src="/src/assets/lunar-sidebar-logo4.png"
-            alt="Trade Lunar"
-            className={`
-              absolute inset-0 m-auto max-w-[180px] h-auto
-              transition-all duration-200 ease-out
-              ${
-                contentHidden
-                  ? "opacity-0 translate-y-3"
-                  : "opacity-100 translate-y-0"
-              }
-            `}
-          />
-        )}
+  className={`
+    h-screen flex flex-col text-white
+    bg-[#231d2c]
+    transition-[width] duration-300 ease-in-out
+    ${collapsed ? "w-[68px]" : "w-[240px]"}
+  `}
+>
+  {/* LOGO */}
+  <div className="px-6 pt-1 pb-3 relative h-[93px] overflow-hidden">
+    {/* LARGE LOGO */}
+    {!collapsed && (
+      <img
+        src="/lunar-sidebar-logo4.png"
+        alt="Trade Lunar"
+        className={`
+          absolute inset-0 m-auto max-w-[180px] h-auto
+          transition-all duration-200 ease-out
+          ${
+            contentHidden
+              ? "opacity-0 translate-y-3"
+              : "opacity-100 translate-y-0"
+          }
+        `}
+      />
+    )}
 
-        {/* SMALL LOGO */}
-        {collapsed && (
-          <img
-            src="/src/assets/lunar4.png"
-            alt="Lunar"
-            className={`
-              absolute inset-0 m-auto w-[44px] h-[44px]
-              transition-all duration-200 ease-out
-              ${
-                contentHidden
-                  ? "opacity-0 translate-y-3"
-                  : "opacity-100 translate-y-0"
-              }
-            `}
-          />
-        )}
-      </div>
+    {/* SMALL LOGO */}
+    {collapsed && (
+      <img
+        src="/lunar4.png"
+        alt="Lunar"
+        className={`
+          absolute inset-0 m-auto w-[44px] h-[44px]
+          transition-all duration-200 ease-out
+          ${
+            contentHidden
+              ? "opacity-0 translate-y-3"
+              : "opacity-100 translate-y-0"
+          }
+        `}
+      />
+    )}
+  </div>
 
       {/* ADD TRADE */}
       <div className="px-3 pb-5 overflow-hidden">
