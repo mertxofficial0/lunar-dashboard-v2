@@ -6,12 +6,14 @@ export default function DashboardHeaderV2() {
   return (
     <div
       className="
+        sticky top-0 z-40
         bg-white
         px-8 py-2
         flex items-center justify-between
-        shadow-[0_3px_10px_rgba(15,23,42,0.12)]
+        shadow-[0_1px_5px_rgba(15,23,42,0.06)]
       "
     >
+
       {/* LEFT */}
       <h1 className="text-lg font-semibold text-slate-900">
         Dashboard
