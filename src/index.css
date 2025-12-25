@@ -116,3 +116,46 @@ body {
 .animate-strength-out {
   animation: strengthOut 0.25s ease-in forwards;
 }
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(0);
+  animation: ripple-animation 750ms ease-out;
+  pointer-events: none;
+}
+
+@keyframes ripple-animation {
+  to {
+    transform: scale(2.8);
+    opacity: 0;
+  }
+}
+/* Ripple base */
+.ripple-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple {
+  position: absolute;
+  border-radius: 9999px;
+  transform: scale(0);
+  animation: ripple 1.1s ease-out;
+  pointer-events: none;
+}
+
+@keyframes ripple {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* Dark backgrounds (sidebar) */
+.ripple-dark .ripple {
+  background: rgba(255, 255, 255, 0.151)
+
+
+
+}

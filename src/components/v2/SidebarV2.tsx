@@ -51,7 +51,7 @@ export default function SidebarV2() {
     {/* LARGE LOGO */}
     {!collapsed && (
       <img
-        src="/lunar-sidebar-logo4.png"
+        src="/lunar-sidebar-logo11.png"
         alt="Trade Lunar"
         className={`
           absolute inset-0 m-auto max-w-[180px] h-auto
@@ -68,7 +68,7 @@ export default function SidebarV2() {
     {/* SMALL LOGO */}
     {collapsed && (
       <img
-        src="/lunar4.png"
+        src="/lunarejder.png"
         alt="Lunar"
         className={`
           absolute inset-0 m-auto w-[44px] h-[44px]
@@ -141,16 +141,25 @@ export default function SidebarV2() {
       key={label as string}
       onClick={() => setSelectedItem(label as string)}
       className={`
-        flex items-center
-        py-[8.5px]
-        ${collapsed ? "justify-center px-0" : "gap-3 px-4"}
-        rounded-lg
-        cursor-pointer
-        transition-all duration-200 ease-out
-        hover:bg-white/5
-        ${isSelected ? "bg-white/18" : ""}
-        ${contentHidden ? "opacity-0 translate-y-3" : "opacity-100 translate-y-0"}
-      `}
+  relative
+  flex items-center
+  py-[8.5px]
+  ${collapsed ? "justify-center px-0" : "gap-3 px-4"}
+  rounded-lg
+  cursor-pointer
+
+  transition-all
+  duration-200
+  ease-out
+
+  ${isSelected
+    ? "bg-white/18 text-white"
+    : "text-white/80 hover:bg-white/5 hover:translate-x-[2px]"
+  }
+
+  ${contentHidden ? "opacity-0 translate-y-3" : "opacity-100 translate-y-0"}
+`}
+
     >
       <div className="w-[22px] min-w-[22px] h-[22px] flex items-center justify-center rounded-md">
         {icon}

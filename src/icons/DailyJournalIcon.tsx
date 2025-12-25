@@ -46,7 +46,7 @@ export default function DailyJournalIcon({
 
       {/* BASE LINE */}
       <rect
-        x="1.8"
+        x="1.4"
         y="20.5"
         width="21.2"
         height="2"

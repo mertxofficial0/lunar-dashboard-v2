@@ -1,4 +1,7 @@
 import InfoIcon from "../../icons/InfoIcon";
+import DashboardHeaderV2 from "./DashboardHeaderV2";
+import DashboardGreetingActionsV2 from "./DashboardGreetingActionsV2";
+
 
 function getGreeting() {
   const hour = new Date().getHours();
@@ -12,39 +15,9 @@ export default function DashboardV2() {
   return (
     <div className="flex-1 overflow-y-auto">
 
-      {/* HEADER – FULL WIDTH WHITE */}
-<div className="
-  bg-white
-  px-8 py-4
-  flex items-center justify-between
-  border-0 outline-none
-  
-">
+   <DashboardHeaderV2 />
+   
 
-
-
-  <h1 className="text-lg font-semibold text-slate-900">
-    Dashboard
-  </h1>
-
-  <div className="flex gap-2">
-    {["Today", "This Week", "This Month", "All"].map((t) => (
-      <button
-        key={t}
-        className="
-          px-4 py-1.5 text-sm
-          bg-white
-          border border-slate-200
-          rounded-md
-          text-slate-600
-          hover:bg-slate-50
-        "
-      >
-        {t}
-      </button>
-    ))}
-  </div>
-</div>
 
 
 
@@ -53,14 +26,9 @@ export default function DashboardV2() {
 {/* DASHBOARD CONTENT */}
 <div className="bg-[#F5F6F8] p-5">
 
-  {/* GREETING – GRID HİZALI */}
-  <div className="mb-6">
-    <div className="grid grid-cols-5 gap-4">
-      <div className="col-span-5 text-md font-semibold text-slate-800">
-        {getGreeting()}!
-      </div>
-    </div>
-  </div>
+  <DashboardGreetingActionsV2 greeting={getGreeting()} />
+
+
 
   {/* STATS */}
   <div className="grid grid-cols-5 gap-4 mb-6">
