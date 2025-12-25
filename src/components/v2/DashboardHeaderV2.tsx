@@ -8,7 +8,7 @@ export default function DashboardHeaderV2() {
       className="
         sticky top-0 z-40
         bg-white
-        px-8 py-2
+        px-5 py-2
         flex items-center justify-between
         shadow-[0_1px_5px_rgba(15,23,42,0.06)]
       "
