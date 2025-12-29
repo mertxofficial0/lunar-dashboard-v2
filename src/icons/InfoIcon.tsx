@@ -1,14 +1,19 @@
+type InfoIconProps = {
+  size?: number;
+  className?: string;
+};
+
 export default function InfoIcon({
   size = 17,
-}: {
-  size?: number;
-}) {
+  className = "",
+}: InfoIconProps) {
   return (
     <svg
       width={size}
       height={size}
       viewBox="0 0 24 24"
       fill="none"
+      className={className}
       xmlns="http://www.w3.org/2000/svg"
     >
       {/* OUTER CIRCLE */}
@@ -19,7 +24,7 @@ export default function InfoIcon({
         fill="url(#infoDark)"
       />
 
-      {/* DOT – daha yuvarlak */}
+      {/* DOT */}
       <circle
         cx="12"
         cy="7.3"
@@ -27,7 +32,7 @@ export default function InfoIcon({
         fill="white"
       />
 
-      {/* BODY – daha ince & oval */}
+      {/* BODY */}
       <rect
         x="11.25"
         y="11"
@@ -38,10 +43,9 @@ export default function InfoIcon({
       />
 
       <defs>
-        {/* Dark premium gradient */}
         <linearGradient id="infoDark" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#262b36ff" /> {/* gray-900 */}
-          <stop offset="100%" stopColor="#1b0435ff" /> {/* near black */}
+          <stop offset="0%" stopColor="#262b36ff" />
+          <stop offset="100%" stopColor="#1b0435ff" />
         </linearGradient>
       </defs>
     </svg>
