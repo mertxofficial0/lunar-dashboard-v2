@@ -1,4 +1,4 @@
-
+import React from "react";
 import DashboardHeaderV2 from "./DashboardHeaderV2";
 import DashboardGreetingActionsV2 from "./DashboardGreetingActionsV2";
 import { dashboardStats } from "../../lib/fakeDashboardStats";
@@ -114,7 +114,12 @@ const dayWinRate =
   title="Profit Factor"
   tooltip="Kazanan işlemlerden elde edilen toplam kârın, kaybeden işlemlerin toplam zararına oranıdır."
   value={dashboardStats.profitFactor.toFixed(2)}
+  profitFactorGauge={{
+  value: dashboardStats.profitFactor,
+}}
+
 />
+
 
     <StatCard
   title="Day Win %"
@@ -133,7 +138,12 @@ const dayWinRate =
   title="Avg Win/Loss Trade"
   tooltip="Tüm tradelerin ortalama kazanç ile ortalama zarar arasındaki oranı gösterir."
   value={avgWinLossTrade.toFixed(2)}
+  avgWinLossBar={{
+    avgWinUsd: avgWin,
+    avgLossUsd: avgLoss,
+  }}
 />
+
 
 
 
@@ -263,8 +273,3 @@ function Card({
     </div>
   );
 }
-
-
-
-
-
