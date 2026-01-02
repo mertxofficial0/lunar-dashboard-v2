@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import url("https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700&display=swap");
 
 
 
@@ -158,4 +159,34 @@ body {
 
 
 
+}
+/* Recharts – focus / outline TAMAMEN KAPAT */
+.recharts-wrapper,
+.recharts-wrapper * {
+  outline: none !important;
+}
+
+.recharts-wrapper:focus,
+.recharts-wrapper:focus-visible,
+.recharts-surface:focus,
+.recharts-surface:focus-visible,
+svg:focus,
+svg:focus-visible {
+  outline: none !important;
+}
+
+/* Tooltip cursor / interaction katmanları */
+.recharts-tooltip-cursor,
+.recharts-layer,
+.recharts-active-dot {
+  outline: none !important;
+}
+
+/* Mouse click sonrası browser focus ring */
+*:focus {
+  outline: none;
+}
+
+*:focus-visible {
+  outline: none;
 }

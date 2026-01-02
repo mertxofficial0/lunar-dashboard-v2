@@ -5,6 +5,7 @@ import { dashboardStats } from "../../lib/fakeDashboardStats";
 import { fakeTrades } from "../../lib/fakeTrades";
 import StatCard from "./StatCard";
 import InfoTooltip from "../ui/InfoTooltip";
+import DailyCumulativePnLChart from "./DailyCumulativePnLChart";
 
 
 
@@ -91,6 +92,7 @@ const dayWinRate =
   value={`$${dashboardStats.netPnL}`}
   positive={dashboardStats.netPnL >= 0}
   showTradeCount
+  
 />
 
 
@@ -172,18 +174,19 @@ const dayWinRate =
   <div className="col-span-4">
     <Card
   title={
+    
     <div className="flex items-center gap-2">
       <span>Daily Net Cumulative P&L</span>
-
       <InfoTooltip tooltip="Her günün net sonucunun önceki günlere eklenmesiyle oluşan toplam performansı ifade eder." />
     </div>
+    
   }
   height="h-[300px]"
 >
+  <DailyCumulativePnLChart />
+</Card>
 
 
-      Area chart
-    </Card>
   </div>
 
   <div className="col-span-4">
