@@ -58,7 +58,7 @@ export default function ProfitFactorGauge({
             fill="none"
             stroke="#10b981"
             strokeWidth={stroke}
-            strokeLinecap="round"
+            strokeLinecap="butt"
             strokeDasharray={`${winLen} ${circumference}`}
             strokeDashoffset={0}
             style={{

@@ -19,7 +19,7 @@ import SidebarToggleIcon from "../../icons/SidebarToggleIcon";
 export default function SidebarV2() {
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
 
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
   const [contentHidden, setContentHidden] = useState(false);
 
   const toggleSidebar = () => {

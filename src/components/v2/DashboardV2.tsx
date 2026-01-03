@@ -67,7 +67,8 @@ const dayWinRate =
 
   return (
 
-    <div className="flex-1 overflow-y-auto">
+    <div className="flex-1 overflow-y-auto overflow-x-hidden">
+
 
    <DashboardHeaderV2 />
    
@@ -85,12 +86,16 @@ const dayWinRate =
 
 
   {/* STATS */}
-  <div className="grid grid-cols-5 gap-4 mb-6">
+  <div className="grid grid-cols-5 gap-4 mb-4">
     <StatCard
+    prefix="$"
   title="Net P&L"
   tooltip="Seçilen zaman aralığında yaptığın tüm işlemlerin toplam kâr ve zarar sonucunu gösterir."
-  value={`$${dashboardStats.netPnL}`}
-  positive={dashboardStats.netPnL >= 0}
+  value={dashboardStats.netPnL}
+
+positive={dashboardStats.netPnL >= 0}
+
+  
   showTradeCount
   
 />

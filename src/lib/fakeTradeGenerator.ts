@@ -38,12 +38,32 @@ export function generateFakeTrades(config: {
   let equity = 0;
   const trades: FakeTrade[] = [];
 
+  /* ======================================
+     🔒 BAŞLANGIÇ TRADE (HER ZAMAN 0 $)
+  ====================================== */
+  trades.push({
+    id: "T-0000",
+    date: formatDate(start),
+    symbol: "NASDAQ",
+    direction: "long",
+    entry: 0,
+    exit: 0,
+    riskUsd: 0,
+    pnlUsd: 0,
+    pnlR: 0,
+    feeUsd: 0,
+    result: "win", // veya "breakeven" (önemsiz)
+  });
+
+  /* ======================================
+     GERÇEK FAKE TRADE’LER
+  ====================================== */
   for (let i = 0; i < tradeCount; i++) {
     const dateOffset = Math.floor((i / tradeCount) * totalDays);
     const date = addDays(start, dateOffset);
 
-    const riskUsd = 500;
-    const win = random() > 0.45; // ~55% winrate
+    const riskUsd = 1000;
+    const win = random() > 0.66; // ~70% winrate
 
     let pnlR: number;
     let pnlUsd: number;

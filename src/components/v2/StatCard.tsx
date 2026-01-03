@@ -5,14 +5,21 @@ import AvgWinLossBar from "./AvgWinLossBar";
 
 import ProfitFactorGauge from "./ProfitFactorGauge";
 
+function formatNumberTR(value: string | number) {
+  if (typeof value !== "number") return value;
+  return value.toLocaleString("tr-TR");
+}
+
 
 type StatCardProps = {
   title: string;
   tooltip: string;
   value: string | number;
+  prefix?: string;   // ✅ EKLENDİ
   suffix?: string;
   positive?: boolean;
   showTradeCount?: boolean;
+
 
   // Trade Win % / Day Win %
   gauge?: {
@@ -38,8 +45,10 @@ export default function StatCard({
   title,
   tooltip,
   value,
-  suffix,
-  positive,
+prefix,   
+suffix,
+positive,
+
   showTradeCount = false,
   gauge,
   avgWinLossBar,
@@ -90,22 +99,24 @@ profitFactorGauge,
     font-semibold
     tracking-tight
     tabular-nums
-
     ${avgWinLossBar ? "-translate-y-[4px]" : "translate-y-[-3px]"}
-
     ${
       positive === undefined
         ? "text-slate-900"
         : positive
-        ? "text-emerald-600"
+        ? "text-[#14b8a6]"
         : "text-rose-600"
     }
   `}
 >
+  {prefix}
+{formatNumberTR(value)}
+{suffix}
 
-    {value}
-    {suffix}
-  </div>
+
+
+</div>
+
 
   {/* AVG WIN / LOSS BAR (SAĞDA) */}
   {avgWinLossBar && (
