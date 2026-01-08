@@ -62,7 +62,7 @@ export function generateFakeTrades(config: {
     const dateOffset = Math.floor((i / tradeCount) * totalDays);
     const date = addDays(start, dateOffset);
 
-    const riskUsd = 1000;
+    const riskUsd = 8000;
     const win = random() > 0.60; // ~70% winrate
 
     let pnlR: number;

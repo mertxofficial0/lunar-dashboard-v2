@@ -29,52 +29,24 @@ function getNiceStep(value: number) {
 }
 
 function getYAxisLayout(value: number) {
-  const abs = Math.abs(value);
+  // Sayıyı YAxis'te gösterdiğin formatla string yap
+  const formatted = formatUsd(value);
 
-  // 0 – 999
-  if (abs >= 0 && abs < 1_000) {
-    return {
-      dx: 0,
-      width: 45,
-    };
-  }
+  // Her karakter için ortalama genişlik (px)
+  const CHAR_WIDTH = 7; // font-size:11 için ideal
+  const BASE_PADDING = 14; // iç boşluk güvenliği
+  const MIN_WIDTH = 70;    // asla küçülmesin
+  const MAX_WIDTH = 100;   // saçma büyümesin
 
-  // 1.000 – 9.999
-  if (abs >= 1_000 && abs < 10_000) {
-    return {
-      dx: 0,
-      width: 50,
-    };
-  }
+  const calculated =
+    formatted.length * CHAR_WIDTH + BASE_PADDING;
 
-  // 10.000 – 99.999
-  if (abs >= 10_000 && abs < 100_000) {
-    return {
-      dx: 0,
-      width: 60,
-    };
-  }
-
-  // 100.000 – 999.999
-  if (abs >= 100_000 && abs < 1_000_000) {
-    return {
-      dx: 0,
-      width: 70,
-    };
-  }
-
-  // 1.000.000 – 9.999.999
-  if (abs >= 1_000_000 && abs < 10_000_000) {
-    return {
-      dx: 0,
-      width: 75,
-    };
-  }
-
-  // 10.000.000+
   return {
     dx: 0,
-    width: 78,
+    width: Math.min(
+      Math.max(calculated, MIN_WIDTH),
+      MAX_WIDTH
+    ),
   };
 }
 
@@ -83,10 +55,17 @@ function getYAxisLayout(value: number) {
 
 
 
+
 function formatUsd(v: number) {
-  if (v === 0) return "$0.00";
-  return `$${v.toLocaleString()}`;
+  const abs = Math.abs(v).toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
+  if (v < 0) return `-$${abs}`;
+  return `$${abs}`;
 }
+
 
 
 function formatDate(d: string) {
@@ -121,7 +100,7 @@ const tradesToday = point?.tradesToday ?? 0;
     position: "absolute",
     left: coordinate?.x ?? 0,
     top: coordinate?.y ?? 0,
-    transform: "translate(-50%, -110%)", // noktanın üstüne alır
+    transform: "translate(-50%, -110%)",
 
     background: "#fff",
     borderRadius: 8,
@@ -131,8 +110,11 @@ const tradesToday = point?.tradesToday ?? 0;
 
     boxShadow: "0 0 8px rgba(15, 23, 42, 0.17)",
     pointerEvents: "none",
+
+    zIndex: 50, // 🔥 FIX BU
   }}
 >
+
 
 {/* ARROW */}
 <div
@@ -362,6 +344,7 @@ export default function DailyCumulativePnLChart() {
 
   const containerRef = useRef<HTMLDivElement | null>(null);
 const [loading, setLoading] = useState(false);
+const hasMountedRef = useRef(false);
 
 
 
@@ -371,15 +354,21 @@ useEffect(() => {
   let timeout: any;
 
   const observer = new ResizeObserver(() => {
-  if (!loading) {
-    setLoading(true);
+  // ⛔ ilk mount tetiklemesini yut
+  if (!hasMountedRef.current) {
+    hasMountedRef.current = true;
+    return;
   }
+
+  // ✅ SADECE resize olunca
+  setLoading(true);
 
   clearTimeout(timeout);
   timeout = setTimeout(() => {
     setLoading(false);
   }, 250);
 });
+
 
 
 
@@ -494,6 +483,7 @@ const paddedMax =
 const yAxisLayout = getYAxisLayout(effectiveMax);
 
 // 🔴 Y ekseni – 11 adet grid / para seviyesi
+
 const yTicks = useMemo(() => {
   const levels = 11;
 
@@ -510,7 +500,12 @@ const yTicks = useMemo(() => {
 
 
   return (
-  <div ref={containerRef} className="relative w-full h-full">
+  <div
+  ref={containerRef}
+  className="relative h-full -ml-5 w-[calc(100%+32px)]"
+>
+
+
 
     {/* GRAFİK WRAPPER – LOADING SIRASINDA OPACITY 0 */}
     <div
@@ -523,7 +518,7 @@ const yTicks = useMemo(() => {
 >
 
       <ResponsiveContainer width="100%" height="100%" debounce={200}>
-        <AreaChart data={data} margin={{ top: 8, right: 5, left: 4, bottom: 4 }}>
+        <AreaChart data={data} margin={{ top: 8, right: 12, left: 4, bottom: 4 }}>
 
           <ReferenceLine
             y={0}
@@ -555,27 +550,40 @@ const yTicks = useMemo(() => {
 
 
           <XAxis
-            dataKey="date"
-            tickFormatter={formatDate}
-            tick={{ fontSize: 11, fill: "#64748b" }}
-            tickMargin={12}
-            axisLine={false}
-            tickLine={false}
-            interval="preserveStartEnd"
-            minTickGap={32}
-            padding={{ left: 16, right: 0 }}
-          />
+  dataKey="date"
+  tickFormatter={formatDate}
+  tick={{
+    fontSize: 11,
+    fill: "#64748b",
+    dx: -10, // 👈 SON TARİHİ HAFİF SOLA ALIRs
+  }}
+  tickMargin={12}
+  axisLine={false}
+  tickLine={false}
+  interval="preserveStartEnd"
+  minTickGap={36}
+  padding={{ left: 30, right: 0 }}
+/>
+
 
           <YAxis
+          
   ticks={yTicks}
   domain={[yTicks[0], yTicks[yTicks.length - 1]]}
   interval={0}
   tickFormatter={formatUsd}
-  tick={{ fontSize: 11, fill: "#64748b", dx: yAxisLayout.dx }}
+  tick={{
+    fontSize: 11,
+    fill: "#64748b",
+    textAnchor: "end",
+    dx: -4,
+  }}
   axisLine={false}
   tickLine={false}
   width={yAxisLayout.width}
+  
 />
+
 
 
           <Tooltip

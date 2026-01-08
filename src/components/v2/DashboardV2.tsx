@@ -6,6 +6,8 @@ import { fakeTrades } from "../../lib/fakeTrades";
 import StatCard from "./StatCard";
 import InfoTooltip from "../ui/InfoTooltip";
 import DailyCumulativePnLChart from "./DailyCumulativePnLChart";
+import NetDailyPnLBarChart from "./NetDailyPnLBarChart";
+import { useEffect, useState } from "react";
 
 
 
@@ -18,8 +20,25 @@ function getGreeting() {
 }
 
 export default function DashboardV2() {
-  
-  
+  const [showCumulative, setShowCumulative] = useState(false);
+  const [showNetPnL, setShowNetPnL] = useState(false);
+    useEffect(() => {
+    // ⏱️ Site açıldıktan ~2sn sonra cumulative
+    const t1 = setTimeout(() => {
+      setShowCumulative(true);
+    }, 1000);
+
+    // ⏱️ Cumulative’den ~2sn sonra net pnl
+    const t2 = setTimeout(() => {
+      setShowNetPnL(true);
+    }, 2500);
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, []);
+
   const winTrades = fakeTrades.filter(t => t.pnlUsd > 0);
 const lossTrades = fakeTrades.filter(t => t.pnlUsd < 0);
 
@@ -179,17 +198,19 @@ positive={dashboardStats.netPnL >= 0}
   <div className="col-span-4">
     <Card
   title={
-    
     <div className="flex items-center gap-2">
       <span>Daily Net Cumulative P&L</span>
       <InfoTooltip tooltip="Her günün net sonucunun önceki günlere eklenmesiyle oluşan toplam performansı ifade eder." />
     </div>
-    
   }
   height="h-[300px]"
 >
-  <DailyCumulativePnLChart />
+  <div className="relative w-full h-full">
+  {showCumulative ? <DailyCumulativePnLChart /> : <ChartSpinner />}
+</div>
+
 </Card>
+
 
 
   </div>
@@ -199,15 +220,19 @@ positive={dashboardStats.netPnL >= 0}
   title={
     <div className="flex items-center gap-2">
       <span>Net Daily P&L</span>
-
       <InfoTooltip tooltip="Günlük bazda elde edilen toplam kazanç ve kayıpların net sonucunu ifade eder." />
     </div>
   }
   height="h-[300px]"
 >
+  <div className="relative w-full h-full">
+  {showNetPnL ? <NetDailyPnLBarChart /> : <ChartSpinner />}
+</div>
 
-      Bar chart
-    </Card>
+
+</Card>
+
+
   </div>
 </div>
 
@@ -244,6 +269,19 @@ positive={dashboardStats.netPnL >= 0}
     </div>
   );
 }
+function ChartSpinner() {
+  return (
+    <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/100 pointer-events-none">
+      <div className="flex flex-col items-center gap-2">
+        <div className="w-6 h-6 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
+        <span className="text-xs text-slate-500">
+          Updating chart…
+        </span>
+      </div>
+    </div>
+  );
+}
+
 
 /* UI */
 function Card({

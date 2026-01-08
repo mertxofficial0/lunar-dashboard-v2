@@ -17,5 +17,5 @@ export type FakeTrade = {
 export const fakeTrades = generateFakeTrades({
   startDate: "2024-01-01",
   endDate: "2024-03-30",
-  tradeCount: 150,
+  tradeCount: 35,
 });
