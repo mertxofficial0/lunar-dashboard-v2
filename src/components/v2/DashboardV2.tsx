@@ -8,8 +8,26 @@ import InfoTooltip from "../ui/InfoTooltip";
 import DailyCumulativePnLChart from "./DailyCumulativePnLChart";
 import NetDailyPnLBarChart from "./NetDailyPnLBarChart";
 import { useEffect, useState } from "react";
+import LunarScoreRadarChart from "./LunarScoreRadarChart";
 
-
+function BetaBadge() {
+  return (
+    <span className="
+      text-[10px]
+      font-bold
+      px-2
+      py-0.5
+      rounded-lg
+      bg-yellow-100
+      text-yellow-700
+      border
+      border-yellow-200
+      tracking-wide
+    ">
+      BETA
+    </span>
+  );
+}
 
 function getGreeting() {
   const hour = new Date().getHours();
@@ -181,18 +199,31 @@ positive={dashboardStats.netPnL >= 0}
   <div className="col-span-4">
     <Card
   title={
-    <div className="flex items-center gap-2">
-      <span>Lunar Score</span>
+    <div className="flex items-center justify-between w-full">
+      
+      {/* SOL TARAF */}
+      <div className="flex items-center gap-2">
+        <span>Lunar Score</span>
 
-      <InfoTooltip tooltip="Kazanma oranı, risk–ödül dengesi ve tutarlılığı bir araya getirerek genel performansını ölçer." />
+        <InfoTooltip tooltip="Kazanma oranı, risk–ödül dengesi ve tutarlılığı bir araya getirerek genel performansını ölçer." />
+      </div>
+
+      {/* SAĞ TARAF */}
+      <BetaBadge />
+
     </div>
   }
   height="h-[300px]"
 >
 
+  <LunarScoreRadarChart
+  winRate={dashboardStats.tradeWinRate}
+  profitFactor={dashboardStats.profitFactor}
+  avgWinLoss={avgWinLossTrade}
+/>
 
-      Radar chart
-    </Card>
+</Card>
+
   </div>
 
   <div className="col-span-4">
@@ -218,13 +249,22 @@ positive={dashboardStats.netPnL >= 0}
   <div className="col-span-4">
     <Card
   title={
-    <div className="flex items-center gap-2">
-      <span>Net Daily P&L</span>
-      <InfoTooltip tooltip="Günlük bazda elde edilen toplam kazanç ve kayıpların net sonucunu ifade eder." />
+    <div className="flex items-center justify-between w-full">
+      
+      {/* SOL TARAF */}
+      <div className="flex items-center gap-2">
+        <span>Net Daily P&L</span>
+        <InfoTooltip tooltip="Günlük bazda elde edilen toplam kazanç ve kayıpların net sonucunu ifade eder." />
+      </div>
+
+      {/* SAĞ TARAF */}
+      <BetaBadge />
+
     </div>
   }
   height="h-[300px]"
 >
+
   <div className="relative w-full h-full">
   {showNetPnL ? <NetDailyPnLBarChart /> : <ChartSpinner />}
 </div>
@@ -318,4 +358,5 @@ function Card({
       </div>
     </div>
   );
+  
 }

@@ -15,14 +15,53 @@ import { fakeTrades } from "../../lib/fakeTrades";
 /* ======================
    FORMAT HELPERS
 ====================== */
-function formatXAxisLabel(label: string) {
-  if (label.includes("W")) return label;   // weekly
-  if (label.length === 7) return label;    // monthly
-  return formatDate(label);                // daily
+function getWeekRangeFromKey(weekKey: string) {
+  // "2024-W10"
+  const [yearPart, weekPart] = weekKey.split("-W");
+  const year = Number(yearPart);
+  const week = Number(weekPart);
+
+  // ISO week → Pazartesi başlangıç
+  const firstDayOfYear = new Date(year, 0, 1);
+  const daysOffset = (week - 1) * 7;
+
+  const weekStart = new Date(firstDayOfYear);
+  weekStart.setDate(
+    firstDayOfYear.getDate() +
+      daysOffset -
+      ((firstDayOfYear.getDay() + 6) % 7)
+  );
+
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 6);
+
+  return { weekStart, weekEnd };
 }
+
+function formatXAxisLabel(label: string) {
+  // WEEKLY → W10
+  if (label.includes("W")) {
+    return label.split("-")[1];
+  }
+
+  // MONTHLY → Mar
+  if (label.length === 7) {
+    return new Date(label + "-01").toLocaleDateString("en-US", {
+      month: "short",
+    });
+  }
+
+  // DAILY → Mar 12
+  return new Date(label).toLocaleDateString("en-US", {
+    month: "short",
+    day: "2-digit",
+  });
+}
+
 
 // 👉 TARİHTEN HAFTA ANAHTARI ÜRETİR (2024-W12)
 function getWeekKey(dateStr: string) {
+  
   const d = new Date(dateStr);
   const firstDay = new Date(d.getFullYear(), 0, 1);
   const week = Math.ceil(
@@ -58,14 +97,7 @@ function formatUsd(v: number) {
   return `$${abs}`;
 }
 
-function formatDate(d: string) {
-  const date = new Date(d);
-  return date.toLocaleDateString("en-US", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "2-digit",
-  });
-}
+
 
 function getYAxisLayout(value: number) {
   const formatted = formatUsd(value);
@@ -87,16 +119,45 @@ function getYAxisLayout(value: number) {
    TOOLTIP (BİREBİR)
 ====================== */
 function CustomDailyPnLTooltip({ active, payload, coordinate }: any) {
+  
   if (!active || !payload || payload.length === 0) return null;
 
   // ✅ label kullanmıyoruz, date'i payload'dan alıyoruz
   const point = payload[0]?.payload;
 
-  const dateForHeader = point?.date ? new Date(point.date) : null;
+  
 
   const v = point?.value ?? 0;
   const tradesToday = point?.tradesToday ?? 0;
   const isPositive = v >= 0;
+let headerText = "";
+
+if (point?.date?.includes("W")) {
+  const { weekStart, weekEnd } = getWeekRangeFromKey(point.date);
+
+  const startMonth = weekStart.toLocaleDateString("en-US", { month: "short" });
+const endMonth = weekEnd.toLocaleDateString("en-US", { month: "short" });
+const year = weekEnd.getFullYear();
+
+headerText =
+  startMonth === endMonth
+    ? `${startMonth} ${weekStart.getDate()}–${weekEnd.getDate()}, ${year}`
+    : `${startMonth} ${weekStart.getDate()} – ${endMonth} ${weekEnd.getDate()}, ${year}`;
+
+} else if (point?.date?.length === 7) {
+  // monthly
+  headerText = new Date(point.date + "-01").toLocaleDateString("en-US", {
+    month: "long",
+    year: "numeric",
+  });
+} else {
+  // daily
+  headerText = new Date(point.date).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
 
   return (
     <div
@@ -131,23 +192,19 @@ function CustomDailyPnLTooltip({ active, payload, coordinate }: any) {
       />
 
       {/* DATE */}
-      <div
-        style={{
-          fontSize: 11,
-          color: "#64748b",
-          fontWeight: 600,
-          textAlign: "center",
-          marginBottom: 4,
-        }}
-      >
-        {dateForHeader
-          ? dateForHeader.toLocaleDateString("en-US", {
-              month: "short",
-              day: "2-digit",
-              year: "numeric",
-            })
-          : ""}
-      </div>
+      {/* DATE */}
+<div
+  style={{
+    fontSize: 11,
+    color: "#64748b",
+    fontWeight: 600,
+    textAlign: "center",
+    marginBottom: 4,
+  }}
+>
+  {headerText}
+</div>
+
 
       <div
         style={{
@@ -237,13 +294,12 @@ const uniqueDates = Array.from(
 const totalDays = uniqueDates.length;
 type Mode = "daily" | "weekly" | "monthly";
 
-let mode: Mode = "daily";
+const mode: Mode = useMemo(() => {
+  if (totalDays <= 50) return "daily";
+  if (totalDays <= 300) return "weekly";
+  return "monthly";
+}, [totalDays]);
 
-if (totalDays > 60 && totalDays <= 180) {
-  mode = "weekly";
-} else if (totalDays > 180) {
-  mode = "monthly";
-}
 
 
 
@@ -263,7 +319,8 @@ if (totalDays > 60 && totalDays <= 180) {
 
   return Object.entries(map)
     .sort(([a], [b]) => a.localeCompare(b))
-    .map(([key, value]) => ({
+    .map(([key, value], index) => ({
+      index,
       date: key,
       value,
       positiveValue: value >= 0 ? value : null,
@@ -271,6 +328,8 @@ if (totalDays > 60 && totalDays <= 180) {
       tradesToday: tradesByBucket[key],
     }));
 }, [mode]);
+
+
 
 
   const minValue = Math.min(...data.map((d) => d.value), 0);
@@ -312,7 +371,13 @@ if (totalDays > 60 && totalDays <= 180) {
     >
       <ResponsiveContainer width="100%" height="100%" debounce={200}>
 
-        <BarChart data={data} margin={{ top: 8, right: 12, left: 4, bottom: 4 }}>
+        <BarChart
+  data={data}
+  margin={{ top: 8, right: 12, left: 4, bottom: 4 }}
+  barCategoryGap="0%"   // 👈 ASIL OLAY BU
+  barGap={0}             // 👈 pozitif / negatif arası boşluk
+>
+
           <ReferenceLine
             y={0}
             stroke="#94a3b8"
@@ -336,8 +401,8 @@ if (totalDays > 60 && totalDays <= 180) {
   axisLine={false}
   tickLine={false}
   interval="preserveStartEnd"
-  minTickGap={32}
-  padding={{ left: 16, right: 20 }}
+  minTickGap={20}
+  padding={{ left: 16, right: 4 }}
 />
 
 
@@ -364,6 +429,7 @@ if (totalDays > 60 && totalDays <= 180) {
   isAnimationActive={false}
   content={({ active, payload, coordinate }) => (
     <CustomDailyPnLTooltip
+    
       active={active}
       payload={payload}
       coordinate={coordinate}
@@ -377,7 +443,7 @@ if (totalDays > 60 && totalDays <= 180) {
           <Bar
   dataKey="positiveValue"
   fill="#10b981"
-  barSize={16}
+  barSize={100}
   radius={[4, 4, 0, 0]}   // 👈 ÜST yuvarlak, ALT DÜZ
 />
 
@@ -385,7 +451,7 @@ if (totalDays > 60 && totalDays <= 180) {
 <Bar
   dataKey="negativeValue"
   fill="#ef4444"
-  barSize={16}
+  barSize={28}
   radius={[4, 4, 0, 0]}   // 👈 ÜST DÜZ, ALT yuvarlak
 />
 
