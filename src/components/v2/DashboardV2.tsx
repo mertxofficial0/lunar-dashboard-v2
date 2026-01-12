@@ -410,7 +410,7 @@ positive={dashboardStats.netPnL >= 0}
     </div>
   }
   height="h-[485px]"
-  tightHeader
+  
 >
   <CalendarV2 currentDate={calendarDate} />
 
@@ -451,13 +451,12 @@ function Card({
   title,
   children,
   height = "h-[240px]",
-  tightHeader = false,
 }: {
   title: React.ReactNode;
   children: React.ReactNode;
   height?: string;
-  tightHeader?: boolean;
 }) {
+
 
 
   return (
