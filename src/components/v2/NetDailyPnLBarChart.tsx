@@ -100,18 +100,24 @@ function formatUsd(v: number) {
 
 
 function getYAxisLayout(value: number) {
+  // Sayıyı YAxis'te gösterdiğin formatla string yap
   const formatted = formatUsd(value);
 
-  const CHAR_WIDTH = 7;
-  const BASE_PADDING = 14;
-  const MIN_WIDTH = 70;
-  const MAX_WIDTH = 100;
+  // Her karakter için ortalama genişlik (px)
+  const CHAR_WIDTH = 6.5; // font-size:11 için ideal
+  const BASE_PADDING = 14; // iç boşluk güvenliği
+  const MIN_WIDTH = 70;    // asla küçülmesin
+  const MAX_WIDTH = 100;   // saçma büyümesin
 
-  const calculated = formatted.length * CHAR_WIDTH + BASE_PADDING;
+  const calculated =
+    formatted.length * CHAR_WIDTH + BASE_PADDING;
 
   return {
     dx: 0,
-    width: Math.min(Math.max(calculated, MIN_WIDTH), MAX_WIDTH),
+    width: Math.min(
+      Math.max(calculated, MIN_WIDTH),
+      MAX_WIDTH
+    ),
   };
 }
 
@@ -168,9 +174,9 @@ headerText =
         transform: "translate(-50%, -110%)",
         background: "#fff",
         borderRadius: 8,
-        padding: "8px 12px",
+        padding: "4px 8px",
         fontSize: 12,
-        minWidth: 180,
+        minWidth: 140,
         boxShadow: "0 0 8px rgba(15, 23, 42, 0.17)",
         pointerEvents: "none",
         zIndex: 50,
@@ -195,28 +201,29 @@ headerText =
       {/* DATE */}
 <div
   style={{
-    fontSize: 11,
+    fontSize: 10,
     color: "#64748b",
     fontWeight: 600,
     textAlign: "center",
-    marginBottom: 4,
+    marginBottom: 2,
   }}
 >
   {headerText}
 </div>
 
-
-      <div
-        style={{
-          height: 1,
-          backgroundColor: "#e5e7eb",
-          margin: "1px -12px 8px",
-        }}
-      />
+{/* DIVIDER */}
+<div
+  style={{
+    height: 0.5,
+    backgroundColor: "#e1e3e7ff",
+    margin: "1px -8px 5px", // ⬅️ sol–sağ padding’i kırar
+  }}
+/>
+      
 
       {/* DAILY NET PNL */}
       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-        <span style={{ fontSize: 11, color: "#64748b", minWidth: 70 }}>
+        <span style={{ fontSize: 10, color: "#64748b", minWidth: 70 }}>
           Daily Net PnL
         </span>
 
@@ -226,7 +233,7 @@ headerText =
             alignItems: "center",
             gap: 4,
             padding: "1px 6px",
-            fontSize: 11,
+            fontSize: 10,
             fontWeight: 600,
             color: isPositive ? "#007a55" : "#c90f3c",
             backgroundColor: isPositive ? "#dbfaec" : "#ffebed",
@@ -239,7 +246,7 @@ headerText =
       </div>
 
       {tradesToday > 0 && (
-        <div style={{ marginTop: 6, fontSize: 11, color: "#475569" }}>
+        <div style={{ marginTop: 6, fontSize: 10, color: "#475569" }}>
           {tradesToday} trades
         </div>
       )}
@@ -381,7 +388,7 @@ const mode: Mode = useMemo(() => {
           <ReferenceLine
             y={0}
             stroke="#94a3b8"
-            strokeDasharray="4 4"
+            strokeDasharray="3 3"
             strokeWidth={1.5}
           />
 
@@ -396,7 +403,7 @@ const mode: Mode = useMemo(() => {
   dataKey="date"
   scale="band"           // 🔥 ASIL FIX
   tickFormatter={formatXAxisLabel}
-  tick={{ fontSize: 11, fill: "#64748b" }}
+  tick={{ fontSize: 10, fill: "#64748b" }}
   tickMargin={12}
   axisLine={false}
   tickLine={false}
@@ -413,7 +420,7 @@ const mode: Mode = useMemo(() => {
             interval={0}
             tickFormatter={formatUsd}
             tick={{
-              fontSize: 11,
+              fontSize: 10,
               fill: "#64748b",
               textAnchor: "end",
               dx: -4,
@@ -442,7 +449,7 @@ const mode: Mode = useMemo(() => {
 
           <Bar
   dataKey="positiveValue"
-  fill="#10b981"
+  fill="#1cd195ff"
   barSize={100}
   radius={[4, 4, 0, 0]}   // 👈 ÜST yuvarlak, ALT DÜZ
 />
@@ -450,7 +457,7 @@ const mode: Mode = useMemo(() => {
 
 <Bar
   dataKey="negativeValue"
-  fill="#ef4444"
+  fill="#ee5a5aff"
   barSize={28}
   radius={[4, 4, 0, 0]}   // 👈 ÜST DÜZ, ALT yuvarlak
 />

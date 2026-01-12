@@ -11,24 +11,7 @@ import { useEffect, useState } from "react";
 import LunarScoreRadarChart from "./LunarScoreRadarChart";
 import CalendarV2 from "./CalendarV2";
 
-function BetaBadge() {
-  return (
-    <span className="
-      text-[10px]
-      font-bold
-      px-2
-      py-0.5
-      rounded-lg
-      bg-yellow-100
-      text-yellow-700
-      border
-      border-yellow-200
-      tracking-wide
-    ">
-      BETA
-    </span>
-  );
-}
+
 
 function getGreeting() {
   const hour = new Date().getHours();
@@ -143,14 +126,14 @@ const dayWinRate =
 
 
 {/* DASHBOARD CONTENT */}
-<div className="bg-[#F5F6F8] p-5">
+<div className="bg-[#F5F6F8] p-4">
 
   <DashboardGreetingActionsV2 greeting={getGreeting()} />
 
 
 
   {/* STATS */}
-  <div className="grid grid-cols-5 gap-4 mb-4">
+  <div className="grid grid-cols-5 gap-3 mb-3">
     <StatCard
     prefix="$"
   title="Net P&L"
@@ -222,7 +205,7 @@ positive={dashboardStats.netPnL >= 0}
 
 
   {/* GRID */}
-  <div className="grid grid-cols-12 gap-4">
+  <div className="grid grid-cols-12 gap-3">
   <div className="col-span-4">
     <Card
   title={
@@ -236,11 +219,11 @@ positive={dashboardStats.netPnL >= 0}
       </div>
 
       {/* SAĞ TARAF */}
-      <BetaBadge />
+      
 
     </div>
   }
-  height="h-[300px]"
+  height="h-[270px]"
 >
 
   <LunarScoreRadarChart
@@ -261,7 +244,7 @@ positive={dashboardStats.netPnL >= 0}
       <InfoTooltip tooltip="Her günün net sonucunun önceki günlere eklenmesiyle oluşan toplam performansı ifade eder." />
     </div>
   }
-  height="h-[300px]"
+  height="h-[270px]"
 >
   <div className="relative w-full h-full">
   {showCumulative ? <DailyCumulativePnLChart /> : <ChartSpinner />}
@@ -285,11 +268,11 @@ positive={dashboardStats.netPnL >= 0}
       </div>
 
       {/* SAĞ TARAF */}
-      <BetaBadge />
+     
 
     </div>
   }
-  height="h-[300px]"
+  height="h-[270px]"
 >
 
   <div className="relative w-full h-full">
@@ -304,14 +287,14 @@ positive={dashboardStats.netPnL >= 0}
 </div>
 
 {/* LOWER GRID */}
-<div className="grid grid-cols-12 gap-4 mt-4">
+<div className="grid grid-cols-12 gap-3 mt-2.5">
   {/* LEFT COLUMN */}
-  <div className="col-span-4 space-y-4">
-    <Card title="Recent Trades" height="h-[400px]">
+  <div className="col-span-4 space-y-3">
+    <Card title="Recent Trades" height="h-[250px]">
       Recent trades table
     </Card>
 
-    <Card title="Account Balance" height="h-[180px]">
+    <Card title="Account Balance" height="h-[160px]">
       Balance chart / number
     </Card>
   </div>
@@ -378,7 +361,7 @@ positive={dashboardStats.netPnL >= 0}
       </div>
 
       {/* SAĞ TARAF – MONTHLY SUMMARY */}
-<div className="flex items-center gap-4 text-sm">
+<div className="flex items-center gap-4 text-[11px]">
 
   {/* Label */}
   <span className="text-slate-600 font-medium">
@@ -391,7 +374,7 @@ positive={dashboardStats.netPnL >= 0}
       inline-flex items-center justify-center
       px-2.5 py-0.5
       rounded-md
-      text-xs font-semibold
+      text-[11px] font-semibold
       min-w-[72px]
       ${
         monthlyPnL >= 0
@@ -408,11 +391,11 @@ positive={dashboardStats.netPnL >= 0}
   <span
     className="
       inline-flex items-center justify-center
-      px-2.5 py-0.5
+      px-0 py-0.5
       rounded-md
-      text-xs font-semibold
+      text-[11px] font-semibold
       min-w-[72px]
-      bg-slate-100
+      bg-slate-200/70
       text-slate-700
     "
   >
@@ -426,7 +409,7 @@ positive={dashboardStats.netPnL >= 0}
 
     </div>
   }
-  height="h-[500px]"
+  height="h-[485px]"
   tightHeader
 >
   <CalendarV2 currentDate={calendarDate} />
@@ -454,7 +437,7 @@ function ChartSpinner() {
     <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/100 pointer-events-none">
       <div className="flex flex-col items-center gap-2">
         <div className="w-6 h-6 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
-        <span className="text-xs text-slate-500">
+        <span className="text-[11px] text-slate-500">
           Updating chart…
         </span>
       </div>
@@ -481,23 +464,19 @@ function Card({
     <div className="
       bg-white
       rounded-xl
-      p-5
+      p-4
       shadow-[0_1px_1px_rgba(0,0,0,0.03)]
     ">
       {/* TITLE */}
-      <div className="text-sm font-semibold text-slate-700 -mt-1.5
- ">
-        {title}
-      </div>
+      <div className="h-[12px] flex items-center text-[12px] font-semibold text-slate-700">
+  {title}
+</div>
 
-      {/* FULL-WIDTH DIVIDER */}
-      <div
-  className={`
-    -mx-5
-    ${tightHeader ? "mt-1 mb-3" : "mt-3 mb-4"}
-    h-px bg-slate-200
-  `}
-/>
+{/* DIVIDER */}
+<div className="relative -mx-5 mt-3 mb-3">
+  <div className="h-px bg-slate-200 mx-1" />
+
+</div>
 
 
       {/* CONTENT */}

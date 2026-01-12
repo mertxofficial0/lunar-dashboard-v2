@@ -33,7 +33,7 @@ function getYAxisLayout(value: number) {
   const formatted = formatUsd(value);
 
   // Her karakter için ortalama genişlik (px)
-  const CHAR_WIDTH = 7; // font-size:11 için ideal
+  const CHAR_WIDTH = 6.5; // font-size:11 için ideal
   const BASE_PADDING = 14; // iç boşluk güvenliği
   const MIN_WIDTH = 70;    // asla küçülmesin
   const MAX_WIDTH = 100;   // saçma büyümesin
@@ -104,9 +104,9 @@ const tradesToday = point?.tradesToday ?? 0;
 
     background: "#fff",
     borderRadius: 8,
-    padding: "8px 12px",
-    fontSize: 12,
-    minWidth: 180,
+    padding: "4px 8px",
+    fontSize: 10,
+    minWidth: 140,
 
     boxShadow: "0 0 8px rgba(15, 23, 42, 0.17)",
     pointerEvents: "none",
@@ -140,7 +140,7 @@ const tradesToday = point?.tradesToday ?? 0;
     {/* DATE */}
 <div
   style={{
-    fontSize: 11,
+    fontSize: 10,
     color: "#64748b",
     fontWeight: 600,        // ⬅️ kalınlık
     textAlign: "center",    // ⬅️ tam orta
@@ -156,9 +156,9 @@ const tradesToday = point?.tradesToday ?? 0;
 {/* DIVIDER */}
 <div
   style={{
-    height: 1,
-    backgroundColor: "#e5e7eb",
-    margin: "1px -12px 8px", // ⬅️ sol–sağ padding’i kırar
+    height: 0.5,
+    backgroundColor: "#e1e3e7ff",
+    margin: "-2px -8px 5px", // ⬅️ sol–sağ padding’i kırar
   }}
 />
 
@@ -175,7 +175,7 @@ const tradesToday = point?.tradesToday ?? 0;
     >
       <span
         style={{
-          fontSize: 11,
+          fontSize: 10,
           color: "#64748b",
           fontWeight: 500,
           minWidth: 70,
@@ -189,8 +189,8 @@ const tradesToday = point?.tradesToday ?? 0;
           display: "inline-flex",
           alignItems: "center",
           gap: 4,
-          padding: "1px 6px",
-          fontSize: 11,
+          padding: "0.5px 6px",
+          fontSize: 10,
           fontWeight: 600,
           color: isPositive ? "#007a55" : "#c90f3c",
           backgroundColor: isPositive ? "#dbfaec" : "#ffebed",
@@ -213,7 +213,7 @@ const tradesToday = point?.tradesToday ?? 0;
     >
       <span
         style={{
-          fontSize: 11,
+          fontSize: 10,
           color: "#64748b",
           fontWeight: 500,
           minWidth: 70,
@@ -227,8 +227,8 @@ const tradesToday = point?.tradesToday ?? 0;
           display: "inline-flex",
           alignItems: "center",
           gap: 4,
-          padding: "1px 6px",
-          fontSize: 11,
+          padding: "0.5px 6px",
+          fontSize: 10,
           fontWeight: 600,
           color:
             (point?.dailyPnL ?? 0) >= 0 ? "#007a55" : "#c90f3c",
@@ -256,7 +256,7 @@ const tradesToday = point?.tradesToday ?? 0;
       >
         <span
           style={{
-            fontSize: 11,
+            fontSize: 10,
             color: "#64748b",
             fontWeight: 500,
             minWidth: 70,
@@ -270,8 +270,8 @@ const tradesToday = point?.tradesToday ?? 0;
             display: "inline-flex",
             alignItems: "center",
             gap: 4,
-            padding: "1px 6px",
-            fontSize: 11,
+            padding: "0.5px 6px",
+            fontSize: 10,
             fontWeight: 600,
             color: "#c90f3c",
             backgroundColor: "#ffebed",
@@ -296,7 +296,7 @@ const tradesToday = point?.tradesToday ?? 0;
       >
         <span
           style={{
-            fontSize: 11,
+            fontSize: 10,
             color: "#64748b",
             fontWeight: 500,
             minWidth: 70,
@@ -309,8 +309,8 @@ const tradesToday = point?.tradesToday ?? 0;
           style={{
             display: "inline-flex",
             alignItems: "center",
-            padding: "1px 6px",
-            fontSize: 11,
+            padding: "0.5px 6px",
+            fontSize: 10,
             fontWeight: 600,
             color: "#314662",
             backgroundColor: "#eaeef4",
@@ -523,8 +523,8 @@ const yTicks = useMemo(() => {
           <ReferenceLine
             y={0}
             stroke="#94a3b8"
-            strokeDasharray="4 4"
-            strokeWidth={1.5}
+            strokeDasharray="3 3"
+            strokeWidth={1}
             ifOverflow="extendDomain"
           />
 
@@ -553,9 +553,9 @@ const yTicks = useMemo(() => {
   dataKey="date"
   tickFormatter={formatDate}
   tick={{
-    fontSize: 11,
+    fontSize: 10,
     fill: "#64748b",
-    dx: -10, // 👈 SON TARİHİ HAFİF SOLA ALIRs
+    dx: -15, // 👈 SON TARİHİ HAFİF SOLA ALIRs
   }}
   tickMargin={12}
   axisLine={false}
@@ -573,7 +573,7 @@ const yTicks = useMemo(() => {
   interval={0}
   tickFormatter={formatUsd}
   tick={{
-    fontSize: 11,
+    fontSize: 10,
     fill: "#64748b",
     textAnchor: "end",
     dx: -4,
@@ -610,7 +610,7 @@ const yTicks = useMemo(() => {
             dataKey="positiveValue"
             stroke="#10b981"
             fill="url(#positivePnL)"
-            strokeWidth={2}
+            strokeWidth={1.6}
             dot={false}
             baseValue={0}
             
@@ -621,7 +621,7 @@ const yTicks = useMemo(() => {
             dataKey="negativeValue"
             stroke="#ef4444"
             fill="url(#negativePnL)"
-            strokeWidth={2}
+            strokeWidth={1.6}
             dot={false}
             baseValue={0}
             
@@ -636,7 +636,7 @@ const yTicks = useMemo(() => {
       <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/100 pointer-events-none">
         <div className="flex flex-col items-center gap-2">
           <div className="w-6 h-6 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
-          <span className="text-xs text-slate-500">Updating chart…</span>
+          <span className="text-[11px] text-slate-500">Updating chart…</span>
         </div>
       </div>
     )}

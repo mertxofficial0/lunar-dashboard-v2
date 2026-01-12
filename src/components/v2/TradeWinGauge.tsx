@@ -27,8 +27,8 @@ useEffect(() => {
   const bePct = (breakeven / total) * 100;
   const lossPct = (loss / total) * 100;
 
-  const size = small ? 90 : 120;
-  const stroke = small ? 7 : 9;
+  const size = small ? 84 : 112;
+  const stroke = small ? 6 : 8;
   const radius = (size - stroke) / 2;
   const circumference = Math.PI * radius;
 
@@ -100,12 +100,12 @@ const lossLen = animated ? (lossPct / 100) * circumference : 0;
   <div
     className="
       min-w-[18px]
-      h-[14px]
+      h-[13px]
       px-1
       rounded
       bg-emerald-200/40
       text-emerald-700
-      text-[10px]
+      text-[9px]
       font-semibold
       flex
       items-center
@@ -120,12 +120,12 @@ const lossLen = animated ? (lossPct / 100) * circumference : 0;
   <div
     className="
       min-w-[18px]
-      h-[14px]
+      h-[13px]
       px-1
       rounded
       bg-slate-200/70
       text-slate-700
-      text-[10px]
+      text-[9px]
       font-semibold
       flex
       items-center
@@ -140,12 +140,12 @@ const lossLen = animated ? (lossPct / 100) * circumference : 0;
   <div
     className="
       min-w-[18px]
-      h-[14px]
+      h-[13px]
       px-1
       rounded
       bg-rose-200/40
       text-rose-700
-      text-[10px]
+      text-[9px]
       font-semibold
       flex
       items-center

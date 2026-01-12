@@ -43,18 +43,19 @@ export default function SidebarV2() {
     h-screen flex flex-col text-white
     bg-[#231d2c]
     transition-[width] duration-300 ease-in-out
-    ${collapsed ? "w-[68px]" : "w-[240px]"}
+    ${collapsed ? "w-[60px]" : "w-[210px]"}
+
   `}
 >
   {/* LOGO */}
-  <div className="px-6 pt-1 pb-3 relative h-[93px] overflow-hidden">
+  <div className="px-6 pt-1 pb-3 relative h-[80px] overflow-hidden">
     {/* LARGE LOGO */}
     {!collapsed && (
       <img
         src="/lunar-sidebar-logo11.png"
         alt="Trade Lunar"
         className={`
-          absolute inset-0 m-auto max-w-[180px] h-auto
+          absolute inset-0 m-auto max-w-[160px] h-auto
           transition-all duration-200 ease-out
           ${
             contentHidden
@@ -71,7 +72,7 @@ export default function SidebarV2() {
         src="/lunarejder.png"
         alt="Lunar"
         className={`
-          absolute inset-0 m-auto w-[44px] h-[44px]
+          absolute inset-0 m-auto w-[38px] h-[38px]
           transition-all duration-200 ease-out
           ${
             contentHidden
@@ -84,13 +85,13 @@ export default function SidebarV2() {
   </div>
 
       {/* ADD TRADE */}
-      <div className="px-3 pb-5 overflow-hidden">
+      <div className="px-2.5 pb-5 overflow-hidden">
         {!collapsed ? (
           <button
             className={`
-              w-full py-2.5 rounded-lg
+              w-full py-2 rounded-lg
               bg-[#6d5bd0] hover:bg-[#7c6be6]
-              text-sm font-medium
+              text-[12px] font-medium
               transition-all duration-200 ease-out
               ${
                 contentHidden
@@ -121,7 +122,7 @@ export default function SidebarV2() {
       </div>
 
       {/* NAV */}
-      <nav className="flex-1 px-3 text-sm space-y-1 overflow-hidden">
+      <nav className="flex-1 px-3 text-[12px] space-y-1 overflow-hidden">
         {[
   ["Dashboard", <DashboardIcon />],
   ["Daily Journal", <DailyJournalIcon />],
@@ -143,7 +144,7 @@ export default function SidebarV2() {
       className={`
   relative
   flex items-center
-  py-[8.5px]
+  py-[7.5px]
   ${collapsed ? "justify-center px-0" : "gap-3 px-4"}
   rounded-lg
   cursor-pointer
@@ -161,7 +162,7 @@ export default function SidebarV2() {
 `}
 
     >
-      <div className="w-[22px] min-w-[22px] h-[22px] flex items-center justify-center rounded-md">
+      <div className="w-[20px] min-w-[20px] h-[20px] flex items-center justify-center rounded-md">
         {icon}
       </div>
 
@@ -175,7 +176,7 @@ export default function SidebarV2() {
       </nav>
 
       {/* PROFILE */}
-      <div className="px-3 pb-2 overflow-hidden">
+      <div className="px-2 pb-0 overflow-hidden">
         {!collapsed && (
           <div
             className={`
@@ -192,10 +193,10 @@ export default function SidebarV2() {
               M
             </div>
             <div className="flex flex-col leading-tight">
-              <span className="text-sm text-white font-medium">
+              <span className="text-[12px] text-white font-medium">
                 Mert Zengin
               </span>
-              <span className="text-[11px] text-white/50">
+              <span className="text-[9px] text-white/50">
                 mertxofficial0@gmail.com
               </span>
             </div>
@@ -228,11 +229,11 @@ export default function SidebarV2() {
 )}
 
       {/* COLLAPSE BUTTON */}
-      <div className="px-3 pb-4">
+      <div className="px-3 pb-2.5">
   <button
   onClick={toggleSidebar}
   className="
-    w-full py-2 rounded-lg
+    w-full py-1.5 rounded-lg
     text-white/70
     bg-white/10
     hover:bg-white/20

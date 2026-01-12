@@ -190,4 +190,6 @@ svg:focus-visible {
 *:focus-visible {
   outline: none;
 }
-
+html {
+  font-size: 15px;
+}

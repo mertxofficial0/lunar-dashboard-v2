@@ -8,7 +8,7 @@ type InfoTooltipProps = {
 
 export default function InfoTooltip({
   tooltip,
-  iconSize = 15,
+  iconSize = 13,
 }: InfoTooltipProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
@@ -64,8 +64,8 @@ export default function InfoTooltip({
           w-[300px]
           rounded-lg
           bg-white
-          px-5 py-2
-          text-[12px]
+          px-3 py-1.5
+          text-[11px]
           text-slate-700
           shadow-[0_3px_10px_rgba(15,23,42,0.12)]
           pointer-events-none
@@ -98,11 +98,11 @@ export default function InfoTooltip({
         `}
       >
         <div className="flex items-center gap-4">
-          <div className="shrink-0 w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
-            <InfoIcon size={18} className="text-slate-500" />
+          <div className="shrink-0 w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center">
+            <InfoIcon size={17} className="text-slate-500" />
           </div>
 
-          <div className="leading-snug font-semibold">
+          <div className="leading-snug font-medium">
             {tooltip}
           </div>
         </div>

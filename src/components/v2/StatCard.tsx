@@ -57,7 +57,8 @@ profitFactorGauge,
   
 }: StatCardProps) {
   return (
-    <div className="bg-white rounded-xl p-5 min-h-[100px] shadow-[0_1px_1px_rgba(0,0,0,0.03)]">
+    <div className="bg-white rounded-xl p-4 min-h-[88px] shadow-[0_1px_1px_rgba(0,0,0,0.03)]">
+
       <div className="flex items-center gap-4">
 
         {/* LEFT */}
@@ -68,7 +69,7 @@ profitFactorGauge,
           {/* HEADER */}
           <div
   className={`
-    flex items-center gap-2 text-xs text-slate-500 mb-1
+    flex items-center gap-2 text-[11px] text-slate-500 mb-0.5
     mt-[1px]
   `}
 >
@@ -82,7 +83,7 @@ profitFactorGauge,
               <InfoTooltip tooltip={tooltip} />
 
               {showTradeCount && (
-                <div className="px-1 h-[15px] rounded bg-slate-200/70 text-[11px] font-semibold text-slate-700 flex items-center justify-center leading-none">
+                <div className="px-1 h-[14px] rounded bg-slate-200/70 text-[10px] font-semibold text-slate-700 flex items-center justify-center leading-none">
                   {fakeTrades.length}
                 </div>
               )}
@@ -90,16 +91,16 @@ profitFactorGauge,
           </div>
 
           {/* VALUE + AVG WIN/LOSS BAR */}
-<div className="flex items-center gap-4 mt-1 w-full min-w-0">
+<div className="flex items-center gap-3 mt-1 w-full min-w-0">
 
 
   <div
   className={`
-    text-[22px]
+    text-[19px]
     font-semibold
     tracking-tight
     tabular-nums
-    ${avgWinLossBar ? "-translate-y-[4px]" : "translate-y-[-3px]"}
+    ${avgWinLossBar ? "-translate-y-[3px]" : "translate-y-[-0px]"}
     ${
       positive === undefined
         ? "text-slate-900"
@@ -141,7 +142,7 @@ profitFactorGauge,
 
         {/* RIGHT – GAUGE (SADECE GAUGE VARSA VE AVG BAR YOKSA) */}
 {gauge && !avgWinLossBar && (
-  <div className="ml-4 shrink-0 hidden lg:flex">
+  <div className="ml-3 shrink-0 hidden lg:flex">
   <TradeWinGauge
     win={gauge.win}
     breakeven={gauge.breakeven}
@@ -153,7 +154,7 @@ profitFactorGauge,
 )}
 
 {profitFactorGauge && !avgWinLossBar && !gauge && (
-  <div className="ml-4 shrink-0 hidden lg:flex items-center justify-center h-full">
+  <div className="ml-3 shrink-0 hidden lg:flex items-center justify-center h-full">
   <ProfitFactorGauge value={profitFactorGauge.value} small />
 </div>
 

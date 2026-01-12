@@ -20,8 +20,8 @@ export default function ProfitFactorGauge({
      ÖLÇÜLER (WIN GAUGE İLE AYNI DİL)
   ========================= */
 
-  const size = small ? 63 : 88;
-  const stroke = small ? 7 : 9;
+  const size = small ? 58 : 80;
+  const stroke = small ? 6 : 8;
   const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
 

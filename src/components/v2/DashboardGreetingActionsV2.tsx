@@ -31,11 +31,11 @@ type Props = {
 
 export default function DashboardGreetingActionsV2({ greeting }: Props) {
   return (
-    <div className="mb-4 -mt-1">
+    <div className="mb-3 -mt-1">
       <div className="flex items-center justify-between">
 
         {/* LEFT – GREETING */}
-        <div className="text-md font-semibold text-slate-700">
+        <div className="text-[15px] font-semibold text-slate-700">
           {greeting}!
         </div>
 
@@ -43,7 +43,7 @@ export default function DashboardGreetingActionsV2({ greeting }: Props) {
         <div className="flex items-center gap-2">
 
           {/* LAST IMPORT */}
-          <span className="text-xs text-slate-500 mr-2">
+          <span className="text-[11px] text-slate-500 mr-1.5">
             Last import was made: NaN
           </span>
 
@@ -53,13 +53,13 @@ export default function DashboardGreetingActionsV2({ greeting }: Props) {
   className="
     relative overflow-hidden
 
-    h-9
-    px-4
+    h-8.5
+    px-3
     flex items-center gap-2
     rounded-lg
     border border-slate-200
     bg-white
-    text-sm text-slate-700
+    text-[13px] text-slate-700
     hover:bg-slate-50
     ripple-light
   "
@@ -75,11 +75,11 @@ export default function DashboardGreetingActionsV2({ greeting }: Props) {
   className="
     relative overflow-hidden
 
-    h-9
-    px-4
+    h-8.5
+    px-3.5
     flex items-center gap-2
     rounded-lg
-    text-sm text-white
+    text-[13px] text-white
 
     bg-gradient-to-b
     from-[#8d6cf0ff]

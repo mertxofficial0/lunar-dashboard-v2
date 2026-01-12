@@ -43,7 +43,7 @@ export default function LunarScoreRadarChart({
   const GRID = "#e5e7eb";
 
   /* 📐 SIZE CONTROL */
-  const CHART_SIZE = 160;
+  const CHART_SIZE = 130;
   const CENTER_SIZE = 100;
 
   /* normalize */
@@ -93,7 +93,7 @@ export default function LunarScoreRadarChart({
               boxShadow: "0 8px 28px rgba(15,23,42,0.14)",
             }}
           >
-            <div className="text-[10px] font-semibold text-slate-500 tracking-wide">
+            <div className="text-[9px] font-semibold text-slate-500 tracking-wide">
               LUNAR SCORE
             </div>
 
@@ -172,7 +172,7 @@ function MetricRow({
           </span>
 
           <span
-            className="text-xs font-semibold px-2 py-0.5 rounded-md"
+            className="text-xs font-semibold px-2 py-0.6 rounded-md"
             style={{
               backgroundColor: `${PURPLE}22`,
               color: PURPLE,
@@ -184,7 +184,7 @@ function MetricRow({
       </div>
 
       {/* SCORE BAR */}
-      <div className="w-full h-1 rounded-full bg-slate-200 overflow-hidden">
+      <div className="w-full h-0.5 rounded-full bg-slate-200 overflow-hidden">
         <div
           className="h-full rounded-full transition-all duration-500"
           style={{

@@ -33,7 +33,7 @@ export default function AvgWinLossBar({
   return (
     <div className="w-full">
       {/* BAR */}
-      <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden flex">
+      <div className="h-[6px] w-full rounded-full bg-slate-100 overflow-hidden flex">
         {/* WIN */}
         <div
           className="h-full bg-emerald-500"
@@ -58,12 +58,12 @@ export default function AvgWinLossBar({
         {/* WIN BOX */}
         <div className="
           min-w-[32px]
-          h-[16px]
+          h-[14px]
           px-1.5
           rounded
           bg-emerald-200/50
           text-emerald-700
-          text-[11px]
+          text-[10px]
           font-semibold
           flex
           items-center
@@ -75,12 +75,12 @@ export default function AvgWinLossBar({
         {/* LOSS BOX */}
         <div className="
           min-w-[32px]
-          h-[16px]
+          h-[14px]
           px-1.5
           rounded
           bg-rose-200/50
           text-rose-700
-          text-[11px]
+          text-[10px]
           font-semibold
           flex
           items-center
