@@ -9,6 +9,7 @@ import DailyCumulativePnLChart from "./DailyCumulativePnLChart";
 import NetDailyPnLBarChart from "./NetDailyPnLBarChart";
 import { useEffect, useState } from "react";
 import LunarScoreRadarChart from "./LunarScoreRadarChart";
+import CalendarV2 from "./CalendarV2";
 
 function BetaBadge() {
   return (
@@ -38,6 +39,32 @@ function getGreeting() {
 }
 
 export default function DashboardV2() {
+  const [calendarDate, setCalendarDate] = useState(() => {
+  const d = new Date();
+  d.setDate(1);
+  return d;
+});
+const selectedYear = calendarDate.getFullYear();
+const selectedMonth = calendarDate.getMonth(); // 0–11
+
+const monthlyTrades = fakeTrades.filter(t => {
+  const d = new Date(t.date);
+  return (
+    d.getFullYear() === selectedYear &&
+    d.getMonth() === selectedMonth
+  );
+});
+
+const monthlyPnL = monthlyTrades.reduce(
+  (sum, t) => sum + t.pnlUsd,
+  0
+);
+
+// trade atılan UNIQUE gün sayısı
+const monthlyTradeDays = new Set(
+  monthlyTrades.map(t => t.date)
+).size;
+
   const [showCumulative, setShowCumulative] = useState(false);
   const [showNetPnL, setShowNetPnL] = useState(false);
     useEffect(() => {
@@ -291,9 +318,122 @@ positive={dashboardStats.netPnL >= 0}
 
   {/* RIGHT COLUMN */}
   <div className="col-span-8">
-    <Card title="Calendar" height="h-[600px]">
-      Calendar view
-    </Card>
+    <Card
+  title={
+    <div className="relative -top-1 inline-flex items-center justify-between w-full">
+
+
+
+      
+      {/* SOL TARAF */}
+      <div className="flex items-center gap-2">
+        <button
+  onClick={() => {
+    const d = new Date(calendarDate);
+    d.setMonth(d.getMonth() - 1);
+    setCalendarDate(d);
+  }}
+  className="p-1 text-slate-600 hover:text-slate-900 transition"
+>
+  <ArrowLeft />
+</button>
+
+
+
+        <button
+  onClick={() => {
+    const d = new Date();
+    d.setDate(1);
+    setCalendarDate(d);
+  }}
+  className="
+  px-2 py-1
+  text-slate-600
+  hover:text-slate-900
+  transition
+"
+
+>
+  {calendarDate.toLocaleDateString("en-US", {
+    month: "short",
+    year: "numeric",
+  })}
+</button>
+
+
+
+
+        <button
+  onClick={() => {
+    const d = new Date(calendarDate);
+    d.setMonth(d.getMonth() + 1);
+    setCalendarDate(d);
+  }}
+  className="p-1 text-slate-600 hover:text-slate-900 transition"
+>
+  <ArrowRight />
+</button>
+
+
+      </div>
+
+      {/* SAĞ TARAF – MONTHLY SUMMARY */}
+<div className="flex items-center gap-4 text-sm">
+
+  {/* Label */}
+  <span className="text-slate-600 font-medium">
+    Monthly Stats:
+  </span>
+
+  {/* Monthly PnL Badge */}
+  <span
+    className={`
+      inline-flex items-center justify-center
+      px-2.5 py-0.5
+      rounded-md
+      text-xs font-semibold
+      min-w-[72px]
+      ${
+        monthlyPnL >= 0
+          ? "bg-emerald-100 text-emerald-700"
+          : "bg-rose-100 text-rose-700"
+      }
+    `}
+  >
+    {monthlyPnL >= 0 ? "+" : ""}
+    ${monthlyPnL.toLocaleString()}
+  </span>
+
+  {/* Trade Days Badge */}
+  <span
+    className="
+      inline-flex items-center justify-center
+      px-2.5 py-0.5
+      rounded-md
+      text-xs font-semibold
+      min-w-[72px]
+      bg-slate-100
+      text-slate-700
+    "
+  >
+    {monthlyTradeDays} days
+  </span>
+
+</div>
+
+
+
+
+    </div>
+  }
+  height="h-[500px]"
+  tightHeader
+>
+  <CalendarV2 currentDate={calendarDate} />
+
+</Card>
+
+
   </div>
 </div>
 
@@ -328,11 +468,14 @@ function Card({
   title,
   children,
   height = "h-[240px]",
+  tightHeader = false,
 }: {
   title: React.ReactNode;
   children: React.ReactNode;
   height?: string;
+  tightHeader?: boolean;
 }) {
+
 
   return (
     <div className="
@@ -348,7 +491,14 @@ function Card({
       </div>
 
       {/* FULL-WIDTH DIVIDER */}
-      <div className="-mx-5 mt-3 mb-4 h-px bg-slate-200" />
+      <div
+  className={`
+    -mx-5
+    ${tightHeader ? "mt-1 mb-3" : "mt-3 mb-4"}
+    h-px bg-slate-200
+  `}
+/>
+
 
       {/* CONTENT */}
       <div
@@ -359,4 +509,37 @@ function Card({
     </div>
   );
   
+}
+function ArrowLeft() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M15 18l-6-6 6-6" />
+    </svg>
+  );
+}
+
+function ArrowRight() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M9 18l6-6-6-6" />
+    </svg>
+  );
 }
