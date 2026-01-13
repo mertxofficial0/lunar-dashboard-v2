@@ -6,8 +6,6 @@ type Props = {
   disabled?: boolean;
 };
 
-
-
 export default function CalendarDayCell({
   day,
   variant = "empty",
@@ -16,45 +14,109 @@ export default function CalendarDayCell({
   disabled = false,
 }: Props) {
   const styles = {
-  empty: "bg-[#f8fafc] border border-slate-200",
+    /* 🔘 Trade olmayan gün */
+    empty: `
+      bg-[#f8fafc]
+      border border-slate-200
+      shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]
+    `,
 
-  positive: "bg-[#c9f2e3] border border-transparent",
+    /* 🟢 Pozitif gün */
+    positive: `
+      bg-[#c8ffed]
+      border border-emerald-300
+      shadow-[0_2px_6px_rgba(16,185,129,0.25)]
+      
+    `,
 
-  negative: "bg-[#ffd6db] border border-transparent",
+    /* 🔴 Negatif gün */
+    negative: `
+      bg-[#ffdfdf]
+      border border-rose-300
+      shadow-[0_2px_6px_rgba(244,63,94,0.25)]
+    `,
 
-  // 🔥 AY DIŞI = BEYAZ
-  disabled: "bg-white border border-slate-200 text-slate-400",
-};
-
+    /* ⚪ Ay dışı */
+    disabled: `
+      bg-white
+      border border-slate-200
+      text-slate-400
+    `,
+  };
 
   const appliedStyle = disabled
     ? styles.disabled
     : styles[variant];
+const hoverBorder = disabled
+  ? ""
+  : variant === "positive"
+  ? "hover:border-emerald-400"
+  : variant === "negative"
+  ? "hover:border-rose-400"
+  : "hover:border-slate-300s";
 
   return (
     <div
-      className={`
-        rounded-lg
-        p-2
-        h-full
-        
-        transition
-        ${appliedStyle}
-        ${!disabled ? "hover:border-slate-300" : ""}
+  className={`
+    rounded-lg
+    p-2
+    h-full
+    flex flex-col
 
-        flex flex-col
-      `}
-    >
-      <div className="text-right text-[10px] text-slate-400">
+    transition-colors
+    duration-150
+
+    ${appliedStyle}
+
+    ${
+      disabled
+        ? "cursor-default"
+        : `
+            cursor-pointer
+            ${hoverBorder}
+          `
+    }
+  `}
+>
+
+
+
+      {/* 📅 GÜN NUMARASI */}
+      <div
+        className={`
+          text-right
+          text-[10px]
+          font-medium
+          ${
+            disabled
+              ? "text-slate-400"
+              : "text-slate-700"
+          }
+        `}
+      >
         {day}
       </div>
 
+      {/* 📊 DATA */}
       {!disabled && variant !== "empty" && (
         <div className="flex-1 flex flex-col items-center justify-center">
-          <div className="text-sm font-semibold text-slate-800">
-            ${pnlUsd?.toLocaleString()}
-          </div>
-          <div className="text-[10px] text-slate-500">
+          <div
+  className={`
+    text-sm
+    font-semibold
+    ${
+      variant === "positive"
+        ? "text-emerald-700"
+        : variant === "negative"
+        ? "text-rose-700"
+        : "text-slate-700"
+    }
+  `}
+>
+  ${Math.round(pnlUsd ?? 0).toLocaleString()}
+</div>
+
+          <div className="text-[10px] text-slate-600">
             {trades} trades
           </div>
         </div>
@@ -62,4 +124,3 @@ export default function CalendarDayCell({
     </div>
   );
 }
-

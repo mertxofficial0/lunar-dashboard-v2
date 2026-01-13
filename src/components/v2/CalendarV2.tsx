@@ -53,13 +53,13 @@ export default function CalendarV2({
       className="
         text-xs
         font-medium
-        text-slate-600
+        text-slate-800/70
         border
         rounded-md
         border border-slate-200
 
         px-2
-        py-1
+        py-1.5
         text-center
         bg-white
       "

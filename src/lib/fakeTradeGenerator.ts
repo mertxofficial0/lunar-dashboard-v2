@@ -38,12 +38,12 @@ function addMinutes(date: Date, min: number, max: number) {
 const SYMBOLS = {
   NAS100: {
     basePrice: 17500,
-    pointValue: 1,
+    pointValue: 10,
     commissionPerLot: -6.5,
   },
   EURUSD: {
     basePrice: 1.08,
-    pointValue: 100,
+    pointValue: 10,
     commissionPerLot: -7,
   },
 };

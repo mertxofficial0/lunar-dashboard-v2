@@ -10,6 +10,7 @@ import NetDailyPnLBarChart from "./NetDailyPnLBarChart";
 import { useEffect, useState } from "react";
 import LunarScoreRadarChart from "./LunarScoreRadarChart";
 import CalendarV2 from "./CalendarV2";
+import WeeklyPnLColumn from "./WeeklyPnLColumn";
 
 
 
@@ -101,6 +102,12 @@ const dayWinCount = dayResults.filter((v) => v > 0).length;
 const dayLossCount = dayResults.filter((v) => v < 0).length;
 const dayBreakevenCount = dayResults.filter((v) => v === 0).length;
 const countedDays = dayWinCount + dayLossCount; // BE hariç (TradeZella gibi)
+const firstDayOfMonth = new Date(selectedYear, selectedMonth, 1);
+const startWeekDay = firstDayOfMonth.getDay();
+const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
+
+const totalCells =
+  startWeekDay + daysInMonth <= 35 ? 35 : 42;
 
 const dayWinRate =
   countedDays === 0 ? 0 : (dayWinCount / countedDays) * 100;
@@ -303,7 +310,8 @@ positive={dashboardStats.netPnL >= 0}
   <div className="col-span-8">
     <Card
   title={
-    <div className="relative -top-1 inline-flex items-center justify-between w-full">
+    <div className="relative inline-flex items-center justify-between w-full translate-y-[-1px]">
+
 
 
 
@@ -330,8 +338,8 @@ positive={dashboardStats.netPnL >= 0}
     setCalendarDate(d);
   }}
   className="
-  px-2 py-1
-  text-slate-600
+  px-3 py-1
+  text-slate-700
   hover:text-slate-900
   transition
 "
@@ -412,7 +420,20 @@ positive={dashboardStats.netPnL >= 0}
   height="h-[485px]"
   
 >
+  <div className="grid grid-cols-[1fr_120px] gap-[14px] h-full w-full">
+  {/* SOL: CALENDAR */}
   <CalendarV2 currentDate={calendarDate} />
+
+  {/* SAĞ: WEEKLY PNL */}
+  <WeeklyPnLColumn
+  trades={monthlyTrades}
+  year={selectedYear}
+  month={selectedMonth}
+  totalRows={totalCells / 7}
+/>
+
+</div>
+
 
 </Card>
 
