@@ -30,6 +30,10 @@ export default function DashboardV2() {
 });
 const selectedYear = calendarDate.getFullYear();
 const selectedMonth = calendarDate.getMonth(); // 0–11
+const [showWeekly, setShowWeekly] = useState(true);
+const [showCalendarSettings, setShowCalendarSettings] = useState(false);
+const [showTradeCount, setShowTradeCount] = useState(true);
+const [showDailyPercent, setShowDailyPercent] = useState(false);
 
 const monthlyTrades = fakeTrades.filter(t => {
   const d = new Date(t.date);
@@ -48,6 +52,8 @@ const monthlyPnL = monthlyTrades.reduce(
 const monthlyTradeDays = new Set(
   monthlyTrades.map(t => t.date)
 ).size;
+
+const monthlyTradeCount = monthlyTrades.length;
 
   const [showCumulative, setShowCumulative] = useState(false);
   const [showNetPnL, setShowNetPnL] = useState(false);
@@ -369,7 +375,7 @@ positive={dashboardStats.netPnL >= 0}
       </div>
 
       {/* SAĞ TARAF – MONTHLY SUMMARY */}
-<div className="flex items-center gap-4 text-[11px]">
+<div className="flex items-center gap-2 text-[11px]">
 
   {/* Label */}
   <span className="text-slate-600 font-medium">
@@ -380,9 +386,9 @@ positive={dashboardStats.netPnL >= 0}
   <span
     className={`
       inline-flex items-center justify-center
-      px-2.5 py-0.5
+      px-1 py-0
       rounded-md
-      text-[11px] font-semibold
+      text-[10px] font-semibold
       min-w-[72px]
       ${
         monthlyPnL >= 0
@@ -397,18 +403,98 @@ positive={dashboardStats.netPnL >= 0}
 
   {/* Trade Days Badge */}
   <span
-    className="
-      inline-flex items-center justify-center
-      px-0 py-0.5
-      rounded-md
-      text-[11px] font-semibold
-      min-w-[72px]
-      bg-slate-200/70
-      text-slate-700
-    "
-  >
-    {monthlyTradeDays} days
-  </span>
+  className="
+    inline-flex items-center justify-center
+    px-2 py-0
+    rounded-md
+    text-[10px] font-semibold
+    bg-slate-200/70
+    text-slate-700
+    gap-1
+  "
+>
+  {monthlyTradeDays} days
+  {/* DİKEY ÇİZGİ */}
+  <span className="mx-0.5 h-2.5 w-px bg-slate-400/70" />
+  {monthlyTradeCount} trades
+</span>
+<button
+  onClick={() => setShowCalendarSettings(v => !v)}
+  className="
+    -ml-1
+    p-1
+    rounded-md
+    text-slate-500
+
+    cursor-pointer
+    hover:text-slate-900
+    hover:bg-violet-100
+    
+
+    transition
+    duration-150
+    relative
+  "
+  
+>
+
+  <SettingsIcon />
+
+  {showCalendarSettings && (
+    <div className="
+  absolute
+  top-full
+  right-0
+  mt-2
+  w-[200px]
+  bg-white
+  border
+  border-slate-200
+  rounded-lg
+  shadow-lg
+  p-3
+  z-50
+  space-y-3
+">
+  {/* WEEKLY TOGGLE */}
+  <label className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+    <input
+  type="checkbox"
+  checked={showWeekly}
+  onChange={() => setShowWeekly(v => !v)}
+  className="accent-violet-600 cursor-pointer"
+/>
+
+    Show weekly summary
+  </label>
+
+  {/* TRADE COUNT TOGGLE */}
+  <label className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+    <input
+      type="checkbox"
+      checked={showTradeCount}
+      onChange={() => setShowTradeCount(v => !v)}
+      className="accent-violet-600 cursor-pointer"
+    />
+    Show trade count
+  </label>
+  {/* DAILY % TOGGLE */}
+<label className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+  <input
+    type="checkbox"
+    checked={showDailyPercent}
+    onChange={() => setShowDailyPercent(v => !v)}
+    className="accent-violet-600 cursor-pointer"
+  />
+  Show daily % change
+</label>
+
+</div>
+
+  )}
+</button>
+
+
 
 </div>
 
@@ -420,17 +506,37 @@ positive={dashboardStats.netPnL >= 0}
   height="h-[485px]"
   
 >
-  <div className="grid grid-cols-[1fr_120px] gap-[14px] h-full w-full">
+  <div
+  className={`grid h-full w-full gap-[14px] ${
+    showWeekly
+      ? "grid-cols-[1fr_120px]"
+      : "grid-cols-1"
+  }`}
+>
+
   {/* SOL: CALENDAR */}
-  <CalendarV2 currentDate={calendarDate} />
+  <CalendarV2
+  currentDate={calendarDate}
+  showTradeCount={showTradeCount}
+  showDailyPercent={showDailyPercent}
+/>
+
+
 
   {/* SAĞ: WEEKLY PNL */}
+  {showWeekly && (
   <WeeklyPnLColumn
   trades={monthlyTrades}
   year={selectedYear}
   month={selectedMonth}
   totalRows={totalCells / 7}
+  showTradeCount={showTradeCount}
+  showDailyPercent={showDailyPercent}
 />
+
+)}
+
+
 
 </div>
 
@@ -525,6 +631,23 @@ function ArrowLeft() {
     </svg>
   );
 }
+function SettingsIcon() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.09a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c0 .66.39 1.26 1 1.51H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
+  );
+}
 
 function ArrowRight() {
   return (
@@ -541,4 +664,5 @@ function ArrowRight() {
       <path d="M9 18l6-6-6-6" />
     </svg>
   );
+  
 }

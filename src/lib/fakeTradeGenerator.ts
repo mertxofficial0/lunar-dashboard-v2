@@ -43,7 +43,7 @@ const SYMBOLS = {
   },
   EURUSD: {
     basePrice: 1.08,
-    pointValue: 10,
+    pointValue: 100,
     commissionPerLot: -7,
   },
 };
@@ -55,16 +55,22 @@ const SYMBOLS = {
 export function generateFakeTrades(config: {
   startDate: string;
   endDate: string;
+
   winRate?: number;
-  totalTrades?: number;   // 🔥 YENİ
-  riskUsd?: number;       // 🔥 YENİ
+  totalTrades?: number;
+  riskUsd?: number;
+
+  initialEquity?: number; // 🔥 YENİ
 }): FakeTrade[] {
   const {
     startDate,
     endDate,
-    winRate = 0.20,
-    totalTrades= 100,
-    riskUsd = 50,          // default eski gibi
+
+    winRate = 0.2,
+    totalTrades = 100,
+    riskUsd = 50,
+
+    initialEquity = 50000,
   } = config;
 
   const start = new Date(startDate);
@@ -73,19 +79,22 @@ export function generateFakeTrades(config: {
   const trades: FakeTrade[] = [];
   let ticket = 10000001;
 
+  // 🔥 ACCOUNT STATE
+  let equity = initialEquity;
+
   for (
     let d = new Date(start);
     d <= end;
     d.setDate(d.getDate() + 1)
   ) {
     if (isWeekend(d)) continue;
-    if (totalTrades && trades.length >= totalTrades) break;
+    if (trades.length >= totalTrades) break;
 
-    // 🔥 ARTIK HER GÜN EN AZ 1 TRADE
-    const tradesToday = randomInt(1, 2);
+    // Her gün 1–2 trade
+    const tradesToday = randomInt(1, 3);
 
     for (let i = 0; i < tradesToday; i++) {
-      if (totalTrades && trades.length >= totalTrades) break;
+      if (trades.length >= totalTrades) break;
 
       const symbolKeys = Object.keys(SYMBOLS);
       const symbol =
@@ -113,16 +122,22 @@ export function generateFakeTrades(config: {
       const closePrice =
         openPrice + priceMove;
 
-      const pnlUsd =
+      const grossPnL =
         priceMove * settings.pointValue * lot;
 
       const commission =
         settings.commissionPerLot * lot;
 
       const netPnL =
-        pnlUsd + commission;
+        grossPnL + commission;
 
       const tradeRiskUsd = Math.abs(riskUsd * lot);
+
+      // 🔥 EQUITY SNAPSHOT
+      const equityBefore = equity;
+      const equityAfter = equityBefore + netPnL;
+
+      equity = equityAfter;
 
       trades.push({
         id: `MT-${ticket++}`,
@@ -134,18 +149,22 @@ export function generateFakeTrades(config: {
         entry: Number(openPrice.toFixed(2)),
         exit: Number(closePrice.toFixed(2)),
 
-        // 🔥 ARTIK DIŞARIDAN AYARLANABİLİR
         riskUsd: tradeRiskUsd,
         pnlUsd: Number(netPnL.toFixed(2)),
-        pnlR: netPnL / tradeRiskUsd,
+        pnlR: Number((netPnL / tradeRiskUsd).toFixed(2)),
 
-        feeUsd: commission,
+        feeUsd: Number(commission.toFixed(2)),
         result:
           netPnL > 0
             ? "win"
             : netPnL < 0
             ? "loss"
             : "breakeven",
+
+        account: {
+          equityBefore: Number(equityBefore.toFixed(2)),
+          equityAfter: Number(equityAfter.toFixed(2)),
+        },
 
         raw: {
           ticket,
@@ -163,7 +182,7 @@ export function generateFakeTrades(config: {
           swap: 0,
           comment: "EA simulated trade",
         },
-      } as FakeTrade & any);
+      });
     }
   }
 

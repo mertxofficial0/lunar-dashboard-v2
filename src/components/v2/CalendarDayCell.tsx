@@ -4,7 +4,15 @@ type Props = {
   pnlUsd?: number;
   trades?: number;
   disabled?: boolean;
+
+  showTradeCount?: boolean;
+  showDailyPercent?: boolean;
+
+  // 🔥 YENİ
+  dailyPercent?: number;
 };
+
+
 
 export default function CalendarDayCell({
   day,
@@ -12,7 +20,12 @@ export default function CalendarDayCell({
   pnlUsd,
   trades,
   disabled = false,
+  showTradeCount = true,
+  showDailyPercent = false,
+  dailyPercent,
 }: Props) {
+
+
   const styles = {
     /* 🔘 Trade olmayan gün */
     empty: `
@@ -23,18 +36,23 @@ export default function CalendarDayCell({
 
     /* 🟢 Pozitif gün */
     positive: `
-      bg-[#c8ffed]
-      border border-emerald-300
-      shadow-[0_2px_6px_rgba(16,185,129,0.25)]
-      
-    `,
+  bg-emerald-100
+border border-emerald-300
+text-emerald-800
+
+  shadow-[0_1px_2px_rgba(0,0,0,0.04)]
+`,
+
 
     /* 🔴 Negatif gün */
     negative: `
-      bg-[#ffdfdf]
-      border border-rose-300
-      shadow-[0_2px_6px_rgba(244,63,94,0.25)]
-    `,
+  bg-rose-100
+border border-rose-300
+text-rose-800
+
+  shadow-[0_1px_2px_rgba(0,0,0,0.04)]
+`,
+
 
     /* ⚪ Ay dışı */
     disabled: `
@@ -53,7 +71,9 @@ const hoverBorder = disabled
   ? "hover:border-emerald-400"
   : variant === "negative"
   ? "hover:border-rose-400"
-  : "hover:border-slate-300s";
+  : "hover:border-slate-300";
+
+
 
   return (
     <div
@@ -99,28 +119,59 @@ const hoverBorder = disabled
 
       {/* 📊 DATA */}
       {!disabled && variant !== "empty" && (
-        <div className="flex-1 flex flex-col items-center justify-center">
-          <div
-  className={`
-    text-sm
-    font-semibold
-    ${
-      variant === "positive"
-        ? "text-emerald-700"
-        : variant === "negative"
-        ? "text-rose-700"
-        : "text-slate-700"
-    }
-  `}
->
-  ${Math.round(pnlUsd ?? 0).toLocaleString()}
-</div>
+  <div className="flex-1 relative">
+    
+    {/* SAĞ ALT BLOK */}
+    <div className="absolute bottom-1.5 right-1.5 text-right space-y-[3px]">
 
-          <div className="text-[10px] text-slate-600">
-            {trades} trades
-          </div>
-        </div>
-      )}
+      {/* PNL */}
+      <div
+        className={`
+          text-[13px]
+          font-semibold
+          leading-tight
+          z-0
+          ${
+            variant === "positive"
+              ? "text-slate-900"
+              : variant === "negative"
+              ? "text-slate-900"
+              : "text-slate-800"
+          }
+        `}
+      >
+        {pnlUsd! >= 0 ? "+" : "-"}${Math.abs(Math.round(pnlUsd!)).toLocaleString()}
+      </div>
+
+      {/* TRADES */}
+      {showTradeCount && (
+  <div className="text-[10px] text-slate-600 leading-none">
+    {trades} trades
+  </div>
+)}
+{showDailyPercent && dailyPercent !== undefined && (
+  <div
+    className={`
+      text-[10px]
+      font-medium
+      leading-none
+      ${
+        dailyPercent >= 0
+          ? "text-emerald-700"
+          : "text-rose-700"
+      }
+    `}
+  >
+    {dailyPercent >= 0 ? "+" : ""}
+    {dailyPercent.toFixed(2)}%
+  </div>
+)}
+
+
+    </div>
+  </div>
+)}
+
     </div>
   );
 }

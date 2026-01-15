@@ -16,6 +16,12 @@ export type FakeTrade = {
   feeUsd: number;
   result: "win" | "loss" | "breakeven";
 
+  // 🔥 ACCOUNT SNAPSHOT (KURUMSAL JOURNAL)
+  account: {
+    equityBefore: number;
+    equityAfter: number;
+  };
+
   // 🔥 MT RAW DATA
   raw: {
     ticket: number;
@@ -34,8 +40,15 @@ export type FakeTrade = {
   };
 };
 
-export const fakeTrades = generateFakeTrades({
+export const fakeTrades: FakeTrade[] = generateFakeTrades({
   startDate: "2024-01-01",
   endDate: "2025-12-30",
+
   winRate: 0.33,
+  totalTrades: 300,
+
+  riskUsd: 50,
+
+  // 🔥 BAŞLANGIÇ ACCOUNT SIZE
+  initialEquity: 50000,
 });

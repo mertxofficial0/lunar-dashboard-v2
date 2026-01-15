@@ -1,85 +1,136 @@
+type WeekBucket = {
+  label: string;
+  from: number;
+  to: number;
+  pnl: number;
+  trades: number;
+  equityBefore?: number;
+  equityAfter?: number;
+};
+
 type Trade = {
   date: string;
   pnlUsd: number;
+  account: {
+    equityBefore: number;
+    equityAfter: number;
+  };
 };
+
 
 type Props = {
   trades: Trade[];
   year: number;
-  month: number; // 0–11
-  totalRows: number; // 5 veya 6 (calendar ile aynı)
+  month: number;
+  totalRows: number;
+  showTradeCount: boolean;
+
+  // 🔥 YENİ
+  showDailyPercent: boolean;
 };
+
+
 
 export default function WeeklyPnLColumn({
   trades,
   year,
   month,
   totalRows,
+  showTradeCount,
+  showDailyPercent,
 }: Props) {
+
+
   /* =========================
      WEEK BUCKETS
   ========================= */
-  const weeks = [
+  const weeks: WeekBucket[] = [
   { label: "Week 1", from: 1, to: 7, pnl: 0, trades: 0 },
   { label: "Week 2", from: 8, to: 14, pnl: 0, trades: 0 },
   { label: "Week 3", from: 15, to: 21, pnl: 0, trades: 0 },
   { label: "Week 4", from: 22, to: 28, pnl: 0, trades: 0 },
   { label: "Week 5", from: 29, to: 31, pnl: 0, trades: 0 },
-  { label: "Week 6", from: 32, to: 38, pnl: 0, trades: 0 }, 
+  { label: "Week 6", from: 32, to: 38, pnl: 0, trades: 0 },
 ];
+
+
 
 
   /* =========================
      PNL + TRADE COUNT
   ========================= */
   trades.forEach((t) => {
-    const d = new Date(t.date);
-    if (d.getFullYear() !== year) return;
-    if (d.getMonth() !== month) return;
+  const d = new Date(t.date);
+  if (d.getFullYear() !== year) return;
+  if (d.getMonth() !== month) return;
 
-    const day = d.getDate();
-    const week = weeks.find((w) => day >= w.from && day <= w.to);
+  const day = d.getDate();
+  const week = weeks.find((w) => day >= w.from && day <= w.to);
+  if (!week) return;
 
-    if (week) {
-      week.pnl += t.pnlUsd;
-      week.trades += 1;
-    }
-  });
+  week.pnl += t.pnlUsd;
+  week.trades += 1;
+
+  // 🔥 HAFTA BAŞI EQUITY (ilk trade)
+  if (week.equityBefore === undefined) {
+    week.equityBefore = t.account.equityBefore;
+  }
+
+  // 🔥 HAFTA SONU EQUITY (son trade overwrite)
+  week.equityAfter = t.account.equityAfter;
+});
+
+const getWeeklyPercent = (w: WeekBucket) => {
+
+  if (
+    w.equityBefore === undefined ||
+    w.equityAfter === undefined ||
+    w.equityBefore === 0
+  ) {
+    return undefined;
+  }
+
+  return (
+    ((w.equityAfter - w.equityBefore) / w.equityBefore) *
+    100
+  );
+};
 
   /* =========================
      STYLES (DAY CELL İLE AYNI)
   ========================= */
   const getWeekStyle = (pnl: number) => {
-    if (pnl > 0) {
-      return `
-        bg-[#c8ffed]
-        border border-emerald-300
-        shadow-[0_2px_6px_rgba(16,185,129,0.25)]
-        text-emerald-700
-      `;
-    }
-
-
-    if (pnl < 0) {
-      return `
-        bg-[#ffdfdf]
-        border border-rose-300
-        shadow-[0_2px_6px_rgba(244,63,94,0.25)]
-        text-rose-700
-      `;
-    }
-
+  if (pnl > 0) {
     return `
-      bg-[#f8fafc]
-      border border-slate-200
-      shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]
+      bg-emerald-100
+      border border-emerald-300
+      text-slate-800
+      shadow-[0_1px_1px_rgba(0,0,0,0.04)]
     `;
-  };
+  }
+
+  if (pnl < 0) {
+    return `
+      bg-rose-100
+      border border-rose-300
+      text-slate-800
+      shadow-[0_1px_1px_rgba(0,0,0,0.04)]
+    `;
+  }
+
+  return `
+    bg-slate-50
+    border border-slate-200
+    text-slate-800
+  `;
+};
+
 const getHoverBorder = (pnl: number) => {
   if (pnl > 0) return "hover:border-emerald-400";
   if (pnl < 0) return "hover:border-rose-400";
   return "hover:border-slate-300";
 };
+
   /* =========================
      RENDER
   ========================= */
@@ -128,11 +179,39 @@ const getHoverBorder = (pnl: number) => {
             </div>
 
             {/* TRADE BADGE */}
-            {w.trades > 0 && (
-  <span className="text-[9px] font-medium text-slate-600">
-    {w.trades} trades
-  </span>
+            {(showTradeCount || showDailyPercent) && (
+  <div className="flex items-center gap-2 text-[9px] font-medium">
+    
+    {/* TRADE COUNT */}
+    {showTradeCount && w.trades > 0 && (
+      <span className="text-slate-600">
+        {w.trades} trades
+      </span>
+    )}
+
+    {/* WEEKLY % */}
+    {showDailyPercent && (() => {
+      const weeklyPercent = getWeeklyPercent(w);
+      if (weeklyPercent === undefined) return null;
+
+      return (
+        <span
+          className={
+            weeklyPercent >= 0
+              ? "text-emerald-700"
+              : "text-rose-700"
+          }
+        >
+          {weeklyPercent >= 0 ? "+" : ""}
+          {weeklyPercent.toFixed(2)}%
+        </span>
+      );
+    })()}
+
+  </div>
 )}
+
+
 
 
 
