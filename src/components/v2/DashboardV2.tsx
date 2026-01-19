@@ -34,6 +34,7 @@ const [showWeekly, setShowWeekly] = useState(true);
 const [showCalendarSettings, setShowCalendarSettings] = useState(false);
 const [showTradeCount, setShowTradeCount] = useState(true);
 const [showDailyPercent, setShowDailyPercent] = useState(false);
+const [highlightExtremeDays, setHighlightExtremeDays] = useState(false);
 
 const monthlyTrades = fakeTrades.filter(t => {
   const d = new Date(t.date);
@@ -117,6 +118,10 @@ const totalCells =
 
 const dayWinRate =
   countedDays === 0 ? 0 : (dayWinCount / countedDays) * 100;
+type MonthlyBadgeMode = "days" | "trades" | "both";
+
+const [monthlyBadgeMode, setMonthlyBadgeMode] =
+  useState<MonthlyBadgeMode>("both");
 
 
 
@@ -316,7 +321,8 @@ positive={dashboardStats.netPnL >= 0}
   <div className="col-span-8">
     <Card
   title={
-    <div className="relative inline-flex items-center justify-between w-full translate-y-[-1px]">
+    <div className="relative z-30 inline-flex items-center justify-between w-full translate-y-[-1px]">
+
 
 
 
@@ -405,7 +411,7 @@ positive={dashboardStats.netPnL >= 0}
   <span
   className="
     inline-flex items-center justify-center
-    px-2 py-0
+    px-3 py-0
     rounded-md
     text-[10px] font-semibold
     bg-slate-200/70
@@ -413,11 +419,21 @@ positive={dashboardStats.netPnL >= 0}
     gap-1
   "
 >
-  {monthlyTradeDays} days
-  {/* DİKEY ÇİZGİ */}
-  <span className="mx-0.5 h-2.5 w-px bg-slate-400/70" />
-  {monthlyTradeCount} trades
+  {(monthlyBadgeMode === "days" ||
+    monthlyBadgeMode === "both") && (
+    <span>{monthlyTradeDays} days</span>
+  )}
+
+  {monthlyBadgeMode === "both" && (
+    <span className="mx-0.5 h-2.5 w-px bg-slate-400/70" />
+  )}
+
+  {(monthlyBadgeMode === "trades" ||
+    monthlyBadgeMode === "both") && (
+    <span>{monthlyTradeCount} trades</span>
+  )}
 </span>
+
 <button
   onClick={() => setShowCalendarSettings(v => !v)}
   className="
@@ -426,8 +442,8 @@ positive={dashboardStats.netPnL >= 0}
     rounded-md
     text-slate-500
 
-    cursor-pointer
-    hover:text-slate-900
+    
+   
     hover:bg-violet-100
     
 
@@ -441,55 +457,132 @@ positive={dashboardStats.netPnL >= 0}
   <SettingsIcon />
 
   {showCalendarSettings && (
-    <div className="
-  absolute
-  top-full
-  right-0
-  mt-2
-  w-[200px]
-  bg-white
-  border
-  border-slate-200
-  rounded-lg
-  shadow-lg
-  p-3
-  z-50
-  space-y-3
-">
-  {/* WEEKLY TOGGLE */}
-  <label className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
-    <input
-  type="checkbox"
-  checked={showWeekly}
-  onChange={() => setShowWeekly(v => !v)}
-  className="accent-violet-600 cursor-pointer"
-/>
+  <div
+    onClick={(e) => e.stopPropagation()}
+    className="
+      absolute
+      top-full
+      right-0
+      mt-2
+      w-[240px]
+      bg-white
+      border
+      border-slate-200
+      rounded-xl
+      shadow-xl
+      p-4
+      z-50
+    "
+  >
+    {/* ===== VIEW ===== */}
+<div className="mb-4">
+  <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">
+    View
+  </div>
+  <div className="h-px bg-slate-200 mt-1 mb-2" />
 
-    Show weekly summary
-  </label>
+  <div className="space-y-1.5">
+    <label className="flex items-center gap-2 text-xs cursor-pointer">
+      <input
+        type="checkbox"
+        checked={showWeekly}
+        onChange={() => setShowWeekly(v => !v)}
+        className="accent-violet-600"
+      />
+      Show weekly summary
+    </label>
 
-  {/* TRADE COUNT TOGGLE */}
-  <label className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+    <label className="flex items-center gap-2 text-xs cursor-pointer">
+      <input
+        type="checkbox"
+        checked={showTradeCount}
+        onChange={() => setShowTradeCount(v => !v)}
+        className="accent-violet-600"
+      />
+      Show trade count
+    </label>
+
+    <label className="flex items-center gap-2 text-xs cursor-pointer">
+      <input
+        type="checkbox"
+        checked={showDailyPercent}
+        onChange={() => setShowDailyPercent(v => !v)}
+        className="accent-violet-600"
+      />
+      Show daily % change
+    </label>
+  </div>
+</div>
+
+
+    
+    
+
+    {/* ===== HIGHLIGHTS ===== */}
+    <div className="mb-4">
+  {/* divider */}
+  <div className="h-px bg-slate-200/70 mb-3" />
+
+  <label className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer select-none">
     <input
       type="checkbox"
-      checked={showTradeCount}
-      onChange={() => setShowTradeCount(v => !v)}
-      className="accent-violet-600 cursor-pointer"
+      checked={highlightExtremeDays}
+      onChange={() => setHighlightExtremeDays(v => !v)}
+      className="
+        accent-violet-600
+        rounded
+        focus:ring-0
+        focus:outline-none
+      "
     />
-    Show trade count
+    Highlight best / worst day
+    
   </label>
-  {/* DAILY % TOGGLE */}
-<label className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
-  <input
-    type="checkbox"
-    checked={showDailyPercent}
-    onChange={() => setShowDailyPercent(v => !v)}
-    className="accent-violet-600 cursor-pointer"
-  />
-  Show daily % change
-</label>
-
 </div>
+
+
+    {/* ===== MONTHLY BADGE ===== */}
+    <div>
+      <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">
+        Monthly badge
+      </div>
+      <div className="h-px bg-slate-200 mt-1 mb-2" />
+
+      <div className="space-y-1.5 pl-1">
+        <label className="flex items-center gap-2 text-xs cursor-pointer">
+          <input
+            type="radio"
+            checked={monthlyBadgeMode === "days"}
+            onChange={() => setMonthlyBadgeMode("days")}
+            className="accent-violet-600"
+          />
+          Days only
+        </label>
+
+        <label className="flex items-center gap-2 text-xs cursor-pointer">
+          <input
+            type="radio"
+            checked={monthlyBadgeMode === "trades"}
+            onChange={() => setMonthlyBadgeMode("trades")}
+            className="accent-violet-600"
+          />
+          Trades only
+        </label>
+
+        <label className="flex items-center gap-2 text-xs cursor-pointer">
+          <input
+            type="radio"
+            checked={monthlyBadgeMode === "both"}
+            onChange={() => setMonthlyBadgeMode("both")}
+            className="accent-violet-600"
+          />
+          Days + trades
+        </label>
+      </div>
+    </div>
+  </div>
+
+
 
   )}
 </button>
@@ -503,23 +596,26 @@ positive={dashboardStats.netPnL >= 0}
 
     </div>
   }
-  height="h-[485px]"
+  height="h-[510px]"
   
 >
   <div
-  className={`grid h-full w-full gap-[14px] ${
+  className={`relative z-0 grid h-full w-full gap-[14px] ${
     showWeekly
       ? "grid-cols-[1fr_120px]"
       : "grid-cols-1"
   }`}
 >
 
+
   {/* SOL: CALENDAR */}
   <CalendarV2
   currentDate={calendarDate}
   showTradeCount={showTradeCount}
   showDailyPercent={showDailyPercent}
+  highlightExtremeDays={highlightExtremeDays}
 />
+
 
 
 
@@ -561,6 +657,7 @@ positive={dashboardStats.netPnL >= 0}
 }
 function ChartSpinner() {
   return (
+    
     <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/100 pointer-events-none">
       <div className="flex flex-col items-center gap-2">
         <div className="w-6 h-6 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />

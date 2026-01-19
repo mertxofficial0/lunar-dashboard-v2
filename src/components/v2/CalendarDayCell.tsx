@@ -7,6 +7,8 @@ type Props = {
 
   showTradeCount?: boolean;
   showDailyPercent?: boolean;
+isBestDay?: boolean;
+isWorstDay?: boolean;
 
   // 🔥 YENİ
   dailyPercent?: number;
@@ -23,6 +25,9 @@ export default function CalendarDayCell({
   showTradeCount = true,
   showDailyPercent = false,
   dailyPercent,
+    isBestDay = false,
+  isWorstDay = false,
+
 }: Props) {
 
 
@@ -87,6 +92,8 @@ const hoverBorder = disabled
     duration-150
 
     ${appliedStyle}
+    ${isBestDay ? "ring-1 ring-emerald-400/80" : ""}
+    ${isWorstDay ? "ring-1 ring-rose-400/80" : ""}
 
     ${
       disabled
@@ -122,7 +129,7 @@ const hoverBorder = disabled
   <div className="flex-1 relative">
     
     {/* SAĞ ALT BLOK */}
-    <div className="absolute bottom-1.5 right-1.5 text-right space-y-[3px]">
+    <div className="absolute bottom-0.5 right-0.5 text-right space-y-[3px]">
 
       {/* PNL */}
       <div

@@ -49,13 +49,35 @@ export default function CalendarV2({
   currentDate,
   showTradeCount,
   showDailyPercent,
+  highlightExtremeDays,
 }: {
   currentDate: Date;
   showTradeCount: boolean;
   showDailyPercent: boolean;
+  highlightExtremeDays: boolean;
 }) {
+
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth(); // 0–11
+// ======================
+// BEST / WORST DAY (Selected month)
+// ======================
+
+let bestPnl: number | null = null;
+let worstPnl: number | null = null;
+
+Object.entries(dailyMap).forEach(([date, summary]) => {
+  const d = new Date(date);
+
+  // sadece seçili ay
+  if (d.getFullYear() !== year || d.getMonth() !== month) return;
+
+  // sadece trade olan günleri dikkate al (0 pnl hariç)
+  if (summary.pnlUsd === 0) return;
+
+  if (bestPnl === null || summary.pnlUsd > bestPnl) bestPnl = summary.pnlUsd;
+  if (worstPnl === null || summary.pnlUsd < worstPnl) worstPnl = summary.pnlUsd;
+});
 
   const firstDayOfMonth = new Date(year, month, 1);
   const startWeekDay = firstDayOfMonth.getDay(); // 0 = Sun
@@ -88,7 +110,9 @@ export default function CalendarV2({
       </div>
 
       {/* GRID */}
-      <div className="grid grid-cols-7 gap-2 flex-1 auto-rows-fr">
+      <div className="grid grid-cols-7 gap-2 flex-1 auto-rows-fr overflow-visible isolation-isolate">
+
+
         {Array.from({
           length:
             startWeekDay + daysInMonth <= 35 ? 35 : 42,
@@ -101,6 +125,9 @@ export default function CalendarV2({
           let pnlUsd: number | undefined;
           let trades: number | undefined;
           let dailyPercent: number | undefined;
+          let isBestDay = false;
+let isWorstDay = false;
+
 
           if (!isOutsideMonth) {
             const dateKey = `${year}-${String(month + 1).padStart(
@@ -117,18 +144,34 @@ export default function CalendarV2({
                 summary.pnlUsd >= 0
                   ? "positive"
                   : "negative";
+if (
+  highlightExtremeDays &&
+  bestPnl !== null &&
+  summary.pnlUsd === bestPnl
+) {
+  isBestDay = true;
+}
+
+if (
+  highlightExtremeDays &&
+  worstPnl !== null &&
+  summary.pnlUsd === worstPnl
+) {
+  isWorstDay = true;
+}
+
 
               if (
-                summary.equityBefore &&
-                summary.equityAfter &&
-                summary.equityBefore !== 0
-              ) {
-                dailyPercent =
-                  ((summary.equityAfter -
-                    summary.equityBefore) /
-                    summary.equityBefore) *
-                  100;
-              }
+  summary.equityBefore !== undefined &&
+  summary.equityAfter !== undefined &&
+  summary.equityBefore !== 0
+) {
+  dailyPercent =
+    ((summary.equityAfter - summary.equityBefore) /
+      summary.equityBefore) *
+    100;
+}
+
             }
           }
 
@@ -145,6 +188,9 @@ export default function CalendarV2({
               showTradeCount={showTradeCount}
               showDailyPercent={showDailyPercent}
               dailyPercent={dailyPercent}
+              isBestDay={isBestDay}
+isWorstDay={isWorstDay}
+
             />
           );
         })}
