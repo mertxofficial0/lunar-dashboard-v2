@@ -11,13 +11,16 @@ import ChallengesIcon from "../../icons/ChallengesIcon";
 import TradeReplayIcon from "../../icons/TradeReplayIcon";
 import MentorModeIcon from "../../icons/MentorModeIcon";
 import SidebarToggleIcon from "../../icons/SidebarToggleIcon";
+import { useNavigate, useLocation } from "react-router-dom";
 
 /* ================================
    SIDEBAR V2 – SEQUENCED ANIMATION
 ================================ */
 
 export default function SidebarV2() {
-  const [selectedItem, setSelectedItem] = useState<string | null>(null);
+  
+const navigate = useNavigate();
+const location = useLocation();
 
   const [collapsed, setCollapsed] = useState(true);
   const [contentHidden, setContentHidden] = useState(false);
@@ -122,58 +125,66 @@ export default function SidebarV2() {
       </div>
 
       {/* NAV */}
-      <nav className="flex-1 px-3 text-[12px] space-y-1 overflow-hidden">
-        {[
-  ["Dashboard", <DashboardIcon />],
-  ["Daily Journal", <DailyJournalIcon />],
-  ["Trade Logs", <TradeLogIcon />],
-  ["Reports", <ReportsIcon />],
-  ["Insights", <InsightsIcon />],
-  ["University", <UniversityIcon />],
-  ["Notebook", <NotebookIcon />],
-  ["Challenges", <ChallengesIcon />],
-  ["Trade Replay", <TradeReplayIcon />],
-  ["Mentor Mode", <MentorModeIcon />],
-].map(([label, icon]) => {
-  const isSelected = selectedItem === label;
+<nav
+  className={`
+    flex-1 overflow-hidden
+    ${collapsed ? "px-2" : "px-3"}
+    text-[12px]
+    space-y-1
+  `}
+>
+  {[
+    { label: "Dashboard", icon: <DashboardIcon />, path: "/dashboard" },
+    { label: "Daily Journal", icon: <DailyJournalIcon />, path: "/daily-journal" },
+    { label: "Trade Logs", icon: <TradeLogIcon />, path: "/trade-logs" },
+    { label: "Reports", icon: <ReportsIcon />, path: "/reports" },
+    { label: "Insights", icon: <InsightsIcon />, path: "/insights" },
+    { label: "University", icon: <UniversityIcon />, path: "/university" },
+    { label: "Notebook", icon: <NotebookIcon />, path: "/notebook" },
+    { label: "Challenges", icon: <ChallengesIcon />, path: "/challenges" },
+    { label: "Trade Replay", icon: <TradeReplayIcon />, path: "/trade-replay" },
+    { label: "Mentor Mode", icon: <MentorModeIcon />, path: "/mentor-mode" },
+  ].map((item) => {
+    const isSelected = location.pathname === item.path;
 
-  return (
-    <div
-      key={label as string}
-      onClick={() => setSelectedItem(label as string)}
-      className={`
-  relative
-  flex items-center
-  py-[7.5px]
-  ${collapsed ? "justify-center px-0" : "gap-3 px-4"}
-  rounded-lg
-  cursor-pointer
+    return (
+      <div
+        key={item.label}
+        onClick={() => navigate(item.path)}
+        className={`
+          relative
+          w-full
+          flex items-center
+          py-[8px]
+          ${collapsed ? "justify-center px-0" : "gap-3 px-4"}
+          rounded-lg
+          cursor-pointer
 
-  transition-all
-  duration-200
-  ease-out
+          transition-all
+          duration-200
+          ease-out
 
-  ${isSelected
-    ? "bg-white/18 text-white"
-    : "text-white/80 hover:bg-white/5 hover:translate-x-[2px]"
-  }
+          ${
+            isSelected
+              ? "bg-white/18 text-white"
+              : "text-white/80 hover:bg-white/5 hover:translate-x-[2px]"
+          }
 
-  ${contentHidden ? "opacity-0 translate-y-3" : "opacity-100 translate-y-0"}
-`}
+          ${contentHidden ? "opacity-0 translate-y-3" : "opacity-100 translate-y-0"}
+        `}
+      >
+        <div className="w-[22px] h-[22px] flex items-center justify-center rounded-md">
+          {item.icon}
+        </div>
 
-    >
-      <div className="w-[20px] min-w-[20px] h-[20px] flex items-center justify-center rounded-md">
-        {icon}
+        {!collapsed && (
+          <span className="whitespace-nowrap">{item.label}</span>
+        )}
       </div>
+    );
+  })}
+</nav>
 
-      {!collapsed && (
-        <span className="whitespace-nowrap">{label as string}</span>
-      )}
-    </div>
-  );
-})}
-
-      </nav>
 
       {/* PROFILE */}
       <div className="px-2 pb-0 overflow-hidden">

@@ -2,7 +2,12 @@ import NotificationBellIcon from "../../icons/NotificationBellIcon";
 import CurrentDollarIcon from "../../icons/CurrentDollarIcon";
 import BrokerWalletIcon from "../../icons/BrokerWalletIcon";
 import CalendarRangeIcon from "../../icons/CalendarRangeIcon";
-export default function DashboardHeaderV2() {
+export default function DashboardHeaderV2({
+  title = "Dashboard",
+}: {
+  title?: string;
+}) {
+
   return (
     <div
       className="
@@ -16,8 +21,10 @@ export default function DashboardHeaderV2() {
 
       {/* LEFT */}
       <h1 className="text-[16px] font-semibold text-slate-900">
-        Dashboard
-      </h1>
+  {title}
+</h1>
+
+
 
       {/* RIGHT */}
       <div className="flex items-center gap-2">

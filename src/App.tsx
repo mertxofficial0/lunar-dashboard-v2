@@ -1,5 +1,11 @@
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
+import { Routes, Route, Navigate } from "react-router-dom";
+import AppLayoutV2 from "./components/v2/AppLayoutV2";
+
+import DashboardV2 from "./components/v2/DashboardV2";
+import DailyJournalV2 from "./components/v2/DailyJournalV2";
+
 
 import "./App.css";
 import React, {
@@ -10,7 +16,7 @@ import React, {
   useRef,
 } from "react";
 
-import DashboardV2Page from "./pages/DashboardV2Page";
+
 
 import Landing from "./components/Landing";
 import LoginScreen from "./components/LoginScreen";
@@ -49,8 +55,18 @@ type Stage = "loading" | "landing" | "login" | "app";
 function App() {
   // 🔥 SADECE TASARIM MODU
   if (DESIGN_MODE) {
-    return <DashboardV2Page />;
-  }
+  return (
+    <Routes>
+      <Route element={<AppLayoutV2 />}>
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/dashboard" element={<DashboardV2 />} />
+        <Route path="/daily-journal" element={<DailyJournalV2 />} />
+      </Route>
+
+      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+    </Routes>
+  );
+}
 
   /* ----- AŞAĞISI NORMAL APP (ŞİMDİLİK KULLANILMIYOR) ----- */
 
@@ -198,10 +214,7 @@ const handleLogout = () => {
 
 
   /* 🧠 RENDER */
-  if (stage === "loading") return null;
-if (DESIGN_MODE) {
-  return <DashboardV2Page />;
-}
+ 
 
   if (stage === "landing")
     return (
