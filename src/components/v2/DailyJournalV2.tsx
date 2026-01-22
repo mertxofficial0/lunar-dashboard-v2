@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useCallback } from "react";
-import DashboardHeaderV2 from "./DashboardHeaderV2";
-import InfoTooltip from "../ui/InfoTooltip";
+
 import CalendarMiniV2 from "./CalendarMiniV2";
+import MiniNetPnLSparkV2 from "./MiniNetPnLSparkV2";
 
 import { fakeTrades } from "../../lib/fakeTrades";
 
@@ -30,6 +30,19 @@ function formatUsd(v: number) {
 
 function formatNum(v: number) {
   return v.toLocaleString("en-US");
+}
+function calcTradeNetRoiPct(t: any) {
+  const before = t?.account?.equityBefore ?? 0;
+  const after = t?.account?.equityAfter ?? 0;
+
+  if (!before || before <= 0) return null;
+
+  return ((after - before) / before) * 100;
+}
+
+function formatPct(v: number) {
+  const sign = v >= 0 ? "+" : "";
+  return `${sign}${v.toFixed(2)}%`;
 }
 
 type DayGroup = {
@@ -129,7 +142,7 @@ export default function DailyJournalV2() {
 
   return (
     <div className="w-full overflow-x-hidden">
-      <DashboardHeaderV2 title="Daily Journal" />
+      
 
 
       {/* PAGE BG */}
@@ -182,37 +195,26 @@ export default function DailyJournalV2() {
         <div className="grid grid-cols-12 gap-3">
           {/* LEFT: DAY LIST */}
           <div className="col-span-12 lg:col-span-10">
-            <Card
-              title={
-                <div className="flex items-center gap-2">
-                  <span>Daily Journal</span>
-                  <InfoTooltip tooltip="Günlük performans özetlerini ve o güne ait trade detaylarını burada görürsün." />
-                </div>
-              }
-              height="h-[760px]"
-            >
-              <div className="w-full h-full overflow-y-auto pr-2">
-                <div className="space-y-2">
-                  {dayGroups.length === 0 && (
-                    <EmptyState
-                      title="No trades for this month"
-                      desc="Takvimden farklı bir ay seç veya fake trade generator ayarlarını değiştir."
-                    />
-                  )}
+  <div className="space-y-2">
+    {dayGroups.length === 0 && (
+      <EmptyState
+        title="No trades for this month"
+        desc="Takvimden farklı bir ay seç veya fake trade generator ayarlarını değiştir."
+      />
+    )}
 
-                  {dayGroups.map((g) => (
-                    <DayAccordionRow
-                      key={g.date}
-                      group={g}
-                      trades={tradesByDay[g.date] || []}
-                      open={!!openDays[g.date]}
-                      onToggle={() => toggleDay(g.date)}
-                    />
-                  ))}
-                </div>
-              </div>
-            </Card>
-          </div>
+    {dayGroups.map((g) => (
+      <DayAccordionRow
+        key={g.date}
+        group={g}
+        trades={tradesByDay[g.date] || []}
+        open={!!openDays[g.date]}
+        onToggle={() => toggleDay(g.date)}
+      />
+    ))}
+  </div>
+</div>
+
 
           {/* RIGHT: MINI CALENDAR */}
           <div className="col-span-12 lg:col-span-2">
@@ -311,164 +313,256 @@ function DayAccordionRow({
   open: boolean;
   onToggle: () => void;
 }) {
+  
   const positive = group.netPnl >= 0;
+  const winTrades = trades.filter((t) => t.pnlUsd > 0);
+  const lossTrades = trades.filter((t) => t.pnlUsd < 0);
+  // COMMISSION (feeUsd genelde negatif, toplam komisyonu cost olarak göstereceğiz)
+  const commissionSigned = trades.reduce((s, t) => s + (t.feeUsd ?? 0), 0); // negatif
+  const commissionAbs = Math.abs(commissionSigned);
 
+  // pnlUsd = NET (çünkü generator: netPnL = grossPnL + commission)
+  const netPnl = trades.reduce((s, t) => s + t.pnlUsd, 0); // = group.netPnl ile aynı
+
+  // grossPnL = netPnL - commission (commission negatif olduğu için çıkarınca eklenir)
+  const grossPnl = trades.reduce((s, t) => s + (t.pnlUsd - t.feeUsd), 0);
+
+  const winRate =
+    trades.length === 0 ? 0 : (winTrades.length / trades.length) * 100;
+
+  const grossProfit = winTrades.reduce((s, t) => s + t.pnlUsd, 0);
+  const grossLoss = Math.abs(lossTrades.reduce((s, t) => s + t.pnlUsd, 0));
+
+  const profitFactor =
+  grossLoss === 0 ? (grossProfit > 0 ? 99.99 : 0) : grossProfit / grossLoss;
+
+const totalRisk = trades.reduce((s, t) => s + (t.riskUsd ?? 0), 0);
+
+ 
   return (
-    <div className="bg-white rounded-xl p-4 shadow-[0_1px_1px_rgba(0,0,0,0.03)] border border-slate-200/70">
+    <div className="bg-white rounded-xl px-3 py-1 shadow-[0_1px_1px_rgba(0,0,0,0.03)] ">
       {/* HEADER */}
-      <div className="flex items-center justify-between">
-        <button onClick={onToggle} className="flex items-center gap-3 text-left">
-          <Chevron open={open} />
-          <div className="flex items-center gap-3">
-            <div className="text-[13px] font-semibold text-slate-900">
-              {formatHeaderDate(group.date)}
-            </div>
+      <div className="flex items-center justify-between min-h-[44px] py-1">
+  <button onClick={onToggle} className="flex items-center gap-3 text-left">
+    <Chevron open={open} />
 
-            <div className="text-[13px] font-semibold">
-              <span className="text-slate-500 mr-2">Net P&L</span>
-              <span className={positive ? "text-emerald-700" : "text-rose-700"}>
-                {formatUsd(group.netPnl)}
-              </span>
-            </div>
+    <div className="flex items-center gap-3">
+      <div className="text-[13px] font-semibold text-slate-900 flex items-center">
+  {formatHeaderDate(group.date)}
+  <span className="ml-2 -mr-0.5 text-slate-300">•</span>
+</div>
 
-            <div className="hidden md:flex items-center gap-2 text-[11px] text-slate-500">
-              <span className="px-2 h-[18px] rounded bg-slate-200/70 text-slate-700 font-semibold flex items-center">
-                {group.tradeCount} trades
-              </span>
-            </div>
-          </div>
-        </button>
 
-        <div className="flex items-center gap-2">
-          <button className="h-8 px-3 rounded-lg border border-slate-200 bg-white text-[12px] text-slate-700 hover:bg-slate-50">
-            View Note
-          </button>
-          <button className="h-8 px-3 rounded-lg border border-slate-200 bg-white text-[12px] text-slate-700 hover:bg-slate-50">
-            Details
-          </button>
-        </div>
-      </div>
+
+      <div className="text-[13px] font-semibold flex items-center">
+  <span
+    className={`mr-1.5 ${
+      positive ? "text-[#14b8a6]" : "text-rose-700"
+    }`}
+  >
+    Net P&L
+  </span>
+
+  <span
+    className={`${
+      positive ? "text-[#14b8a6]" : "text-rose-700"
+    }`}
+  >
+    {formatUsd(group.netPnl)}
+  </span>
+</div>
+
+
+      
+    </div>
+  </button>
+
+  <div className="flex items-center gap-2">
+  <button className="h-8 px-3 flex items-center rounded-lg border border-slate-200 bg-white text-[12px] text-slate-700 hover:bg-slate-50">
+    View Note
+  </button>
+</div>
+
+</div>
+
 
       {/* BODY */}
       {open && (
-        <div className="mt-4">
-          <div className="grid grid-cols-12 gap-3">
-            {/* LEFT MINI CHART PLACEHOLDER */}
-            <div className="col-span-12 lg:col-span-4">
-              <div className="h-[130px] rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-xs text-slate-500">
-                Mini equity curve (next)
+  <div className="mt-4">
+    {/* DIVIDER */}
+    <div className="-mt-3 mb-3 -mx-3">
+  <div className="h-px bg-slate-200" />
+</div>
+
+    <div className="grid grid-cols-12 gap-2">
+      {/* LEFT MINI CHART PLACEHOLDER */}
+      
+      <div className="col-span-12 lg:col-span-2">
+        
+        <MiniNetPnLSparkV2 trades={trades} />
+
+      </div>
+
+      {/* STATS */}
+      <div className="col-span-12 lg:col-span-10">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 -mt-0">
+
+  <MiniStat label="Total Trades" value={group.tradeCount} />
+  <MiniStat label="Winners" value={group.winners} tone="neutral" />
+<MiniStat label="Losers" value={group.losers} tone="neutral" />
+
+  <MiniStat label="Breakeven" value={group.breakeven} tone="muted" />
+  <MiniStat
+    label="Volume"
+    value={`$${totalRisk.toLocaleString("en-US", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    })}`}
+    tone="muted"
+  />
+</div>
+
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-3">
+  <MiniStat label="Win Rate" value={`${winRate.toFixed(1)}%`} tone="neutral"/>
+  <MiniStat label="Profit Factor" value={profitFactor.toFixed(2)} tone="neutral"/>
+  <MiniStat label="Commission" value={`-$${commissionAbs.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} tone="muted" />
+  <MiniStat label="Gross PnL" value={formatUsd(grossPnl)} tone={grossPnl >= 0 ? "good" : "bad"} />
+  <MiniStat label="Net PnL" value={formatUsd(netPnl)} tone={netPnl >= 0 ? "good" : "bad"} />
+</div>
+
+
+      </div>
+
+      {/* TRADES TABLE - FULL WIDTH (EN ALT) */}
+      <div className="col-span-12">
+        
+
+        <div className="mt-1">
+          
+
+          {trades.length === 0 ? (
+            <div className="text-[12px] text-slate-500">
+              No trades on this day.
+            </div>
+          ) : (
+            <div className="rounded-lg border border-slate-200 overflow-hidden">
+              <div className="grid grid-cols-16 gap-0 bg-slate-50 text-[10px] font-semibold text-slate-600 px-3 py-2">
+  <div className="col-span-2">Open Time</div>
+  <div className="col-span-2">Ticker</div>
+  <div className="col-span-2">Direction</div>
+  <div className="col-span-3">Entry → Exit</div>
+
+  <div className="col-span-2">Volume</div>
+  <div className="col-span-2">PnL</div>
+  <div className="col-span-2">Net ROI</div>
+  <div className="col-span-1 text-right">Result</div>
+</div>
+
+
+
+              <div className="divide-y divide-slate-200">
+                {trades.map((t) => {
+                  const pnlPos = t.pnlUsd >= 0;
+                  
+                  return (
+                    
+                    <button
+  key={t.id}
+  className="w-full text-left grid grid-cols-16 px-3 py-2 text-[12px] hover:bg-slate-50 transition"
+>
+
+  {/* OPEN TIME */}
+  <div className="col-span-2 text-slate-700 tabular-nums">
+    {t.raw.openTime.slice(11, 19)}
+
+  </div>
+
+  {/* SYMBOL */}
+  <div className="col-span-2 font-semibold text-slate-900">
+    {t.symbol}
+  </div>
+
+
+                      <div className="col-span-2">
+                        <span
+                          className={`px-2 py-0.5 rounded-md text-[11px] font-semibold ${
+                            t.direction === "long"
+                              ? "bg-emerald-100 text-emerald-800"
+                              : "bg-rose-100 text-rose-800"
+                          }`}
+                        >
+                          {t.direction.toUpperCase()}
+                        </span>
+                      </div>
+
+                      <div className="col-span-3 text-slate-700 tabular-nums">
+  {formatNum(t.entry)} → {formatNum(t.exit)}
+</div>
+
+
+                      <div className="col-span-2 text-slate-700 tabular-nums">
+                        ${formatNum(Math.round(t.riskUsd))}
+                      </div>
+
+                      <div
+                        className={`col-span-2 tabular-nums font-semibold ${
+                          pnlPos ? "text-emerald-700" : "text-rose-700"
+                        }`}
+                      >
+                        {formatUsd(t.pnlUsd)}
+                        <span className="text-[10px] text-slate-500 font-medium ml-2">
+                          ({t.pnlR >= 0 ? "+" : ""}
+                          {t.pnlR.toFixed(2)}R)
+                        </span>
+                      </div>
+{/* NET ROI (trade) */}
+<div
+  className={`col-span-2 tabular-nums font-semibold ${
+    (() => {
+      const pct = calcTradeNetRoiPct(t);
+      return pct === null
+        ? "text-slate-500"
+        : pct >= 0
+        ? "text-emerald-700"
+        : "text-rose-700";
+    })()
+  }`}
+>
+  {(() => {
+    const pct = calcTradeNetRoiPct(t);
+    return pct === null ? "--" : formatPct(pct);
+  })()}
+</div>
+
+                      <div className="col-span-1 text-right">
+                        <span
+                          className={`px-2 py-0.5 rounded-md text-[11px] font-semibold ${
+                            t.result === "win"
+                              ? "bg-emerald-100 text-emerald-800"
+                              : t.result === "loss"
+                              ? "bg-rose-100 text-rose-800"
+                              : "bg-slate-100 text-slate-700"
+                          }`}
+                        >
+                          {t.result.toUpperCase()}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
-
-            {/* STATS */}
-            <div className="col-span-12 lg:col-span-8">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <MiniStat label="Total Trades" value={group.tradeCount} />
-                <MiniStat label="Winners" value={group.winners} />
-                <MiniStat label="Losers" value={group.losers} />
-                <MiniStat label="Breakeven" value={group.breakeven} />
-              </div>
-
-              <div className="mt-3 h-[1px] bg-slate-200/70" />
-
-              {/* TRADES TABLE */}
-              <div className="mt-3">
-                <div className="text-[11px] font-semibold text-slate-700 mb-2">
-                  Trades
-                </div>
-
-                {trades.length === 0 ? (
-                  <div className="text-[12px] text-slate-500">
-                    No trades on this day.
-                  </div>
-                ) : (
-                  <div className="rounded-lg border border-slate-200 overflow-hidden">
-                    <div className="grid grid-cols-12 gap-0 bg-slate-50 text-[10px] font-semibold text-slate-600 px-3 py-2">
-                      <div className="col-span-2">Symbol</div>
-                      <div className="col-span-2">Direction</div>
-                      <div className="col-span-2">Entry → Exit</div>
-                      <div className="col-span-2">Risk</div>
-                      <div className="col-span-2">PnL</div>
-                      <div className="col-span-2 text-right">Result</div>
-                    </div>
-
-                    <div className="divide-y divide-slate-200">
-                      {trades.map((t) => {
-                        const pnlPos = t.pnlUsd >= 0;
-                        return (
-                          <button
-                            key={t.id}
-                            className="w-full text-left grid grid-cols-12 px-3 py-2 text-[12px] hover:bg-slate-50 transition"
-                            onClick={() => {
-                              // later: open a drawer/modal for full trade detail
-                              // For now: quick dev signal
-                              console.log("trade", t);
-                            }}
-                          >
-                            <div className="col-span-2 font-semibold text-slate-900">
-                              {t.symbol}
-                            </div>
-
-                            <div className="col-span-2">
-                              <span
-                                className={`px-2 py-0.5 rounded-md text-[11px] font-semibold ${
-                                  t.direction === "long"
-                                    ? "bg-emerald-100 text-emerald-800"
-                                    : "bg-rose-100 text-rose-800"
-                                }`}
-                              >
-                                {t.direction.toUpperCase()}
-                              </span>
-                            </div>
-
-                            <div className="col-span-2 text-slate-700 tabular-nums">
-                              {formatNum(t.entry)} → {formatNum(t.exit)}
-                            </div>
-
-                            <div className="col-span-2 text-slate-700 tabular-nums">
-                              ${formatNum(Math.round(t.riskUsd))}
-                            </div>
-
-                            <div
-                              className={`col-span-2 tabular-nums font-semibold ${
-                                pnlPos ? "text-emerald-700" : "text-rose-700"
-                              }`}
-                            >
-                              {formatUsd(t.pnlUsd)}
-                              <span className="text-[10px] text-slate-500 font-medium ml-2">
-                                ({t.pnlR >= 0 ? "+" : ""}
-                                {t.pnlR.toFixed(2)}R)
-                              </span>
-                            </div>
-
-                            <div className="col-span-2 text-right">
-                              <span
-                                className={`px-2 py-0.5 rounded-md text-[11px] font-semibold ${
-                                  t.result === "win"
-                                    ? "bg-emerald-100 text-emerald-800"
-                                    : t.result === "loss"
-                                    ? "bg-rose-100 text-rose-800"
-                                    : "bg-slate-100 text-slate-700"
-                                }`}
-                              >
-                                {t.result.toUpperCase()}
-                              </span>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="mt-3 text-[11px] text-slate-500">
-                (Next: Trade detail drawer + day note + mini curve)
-              </div>
-            </div>
-          </div>
+          )}
         </div>
-      )}
+
+        <div className="mt-2 text-[11px] text-slate-500">
+          
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
     </div>
   );
 }
@@ -476,26 +570,51 @@ function DayAccordionRow({
 /* ======================
    UI PARTS
 ====================== */
-function MiniStat({ label, value }: { label: string; value: number }) {
+function MiniStat({
+  label,
+  value,
+  tone = "neutral",
+}: {
+  label: string;
+  value: React.ReactNode;
+  tone?: "good" | "bad" | "neutral" | "muted";
+}) {
+  const toneClass =
+  tone === "good"
+    ? "text-emerald-700"
+    : tone === "bad"
+    ? "text-rose-700"
+    : tone === "muted"
+    ? "text-slate-800"
+    : "text-black";
+
+
   return (
     <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
-      <div className="text-[10px] text-slate-500 font-medium">{label}</div>
-      <div className="text-[13px] font-semibold text-slate-900 tabular-nums">{value}</div>
+      <div className="text-[10px] text-slate-500 font-semibold uppercase tracking-wide">
+        {label}
+      </div>
+      <div className={`text-[13px] font-semibold tabular-nums ${toneClass}`}>
+        {value}
+      </div>
     </div>
   );
 }
 
+
 function Chevron({ open }: { open: boolean }) {
   return (
     <div
-      className={`w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center bg-white transition ${
-        open ? "rotate-90" : "rotate-0"
-      }`}
-    >
+  className={`w-8 h-8 rounded-lg flex items-center justify-center transition ${
+    open ? "rotate-90" : "rotate-0"
+  } bg-slate-100 hover:bg-slate-200`}
+>
+
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
         <path
           d="M9 18l6-6-6-6"
-          stroke="#64748B"
+          stroke="#64748B" // slate-500
+
           strokeWidth="2.4"
           strokeLinecap="round"
           strokeLinejoin="round"

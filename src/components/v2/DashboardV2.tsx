@@ -1,5 +1,5 @@
 import React from "react";
-import DashboardHeaderV2 from "./DashboardHeaderV2";
+
 import DashboardGreetingActionsV2 from "./DashboardGreetingActionsV2";
 import { dashboardStats } from "../../lib/fakeDashboardStats";
 import { fakeTrades } from "../../lib/fakeTrades";
@@ -28,6 +28,8 @@ export default function DashboardV2() {
   d.setDate(1);
   return d;
 });
+
+
 const selectedYear = calendarDate.getFullYear();
 const selectedMonth = calendarDate.getMonth(); // 0–11
 const [showWeekly, setShowWeekly] = useState(true);
@@ -135,7 +137,7 @@ const [monthlyBadgeMode, setMonthlyBadgeMode] =
     <div className="flex-1 overflow-y-auto overflow-x-hidden">
 
 
-   <DashboardHeaderV2 />
+   
    
 
 

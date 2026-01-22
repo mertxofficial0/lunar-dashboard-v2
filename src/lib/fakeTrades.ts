@@ -41,8 +41,8 @@ export type FakeTrade = {
 };
 
 export const fakeTrades: FakeTrade[] = generateFakeTrades({
-  startDate: "2024-01-01",
-  endDate: "2025-12-30",
+  startDate: "2026-01-01",
+  endDate: "2026-12-30",
 
   winRate: 0.33,
   totalTrades: 300,
