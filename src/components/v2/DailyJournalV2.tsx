@@ -2,12 +2,41 @@ import React, { useMemo, useState, useCallback } from "react";
 
 import CalendarMiniV2 from "./CalendarMiniV2";
 import MiniNetPnLSparkV2 from "./MiniNetPnLSparkV2";
+import DailyLogModalV2 from "./DailyLogModalV2";
 
 import { fakeTrades } from "../../lib/fakeTrades";
+
 
 /* ======================
    HELPERS
 ====================== */
+function calcDuration(openTime: string, closeTime: string) {
+  const open = new Date(openTime.replace(" ", "T"));
+  const close = new Date(closeTime.replace(" ", "T"));
+
+  const diffMs = close.getTime() - open.getTime();
+  if (diffMs <= 0) return "--";
+
+  const totalSeconds = Math.floor(diffMs / 1000);
+
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  // 1️⃣ Saat varsa → sadece saat + dakika
+  if (hours > 0) {
+    return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
+  }
+
+  // 2️⃣ Saat yok, dakika varsa → dakika + saniye
+  if (minutes > 0) {
+    return `${minutes}m ${seconds}s`;
+  }
+
+  // 3️⃣ Sadece saniye
+  return `${seconds}s`;
+}
+
 
 
 function formatHeaderDate(dateStr: string) {
@@ -83,6 +112,7 @@ function groupTradesByDay(trades: typeof fakeTrades): DayGroup[] {
    PAGE
 ====================== */
 export default function DailyJournalV2() {
+  
   // Calendar: always first day of month
   const [calendarDate, setCalendarDate] = useState(() => {
     const d = new Date();
@@ -133,6 +163,58 @@ export default function DailyJournalV2() {
   }, [dayGroups]);
 
   const collapseAll = useCallback(() => setOpenDays({}), []);
+// ===== DAILY LOG NOTES (HTML) =====
+const NOTES_KEY = "daily_log_html_v2";
+type NotesMap = Record<string, string>; // { "YYYY-MM-DD": "<p>...</p>" }
+
+const [notes, setNotes] = useState<NotesMap>(() => {
+  try {
+    const raw = localStorage.getItem(NOTES_KEY);
+    return raw ? (JSON.parse(raw) as NotesMap) : {};
+  } catch {
+    return {};
+  }
+});
+
+const persistNotes = useCallback((next: NotesMap) => {
+  setNotes(next);
+  try {
+    localStorage.setItem(NOTES_KEY, JSON.stringify(next));
+  } catch {}
+}, []);
+
+const [logOpen, setLogOpen] = useState(false);
+const [activeDate, setActiveDate] = useState<string | null>(null);
+
+const openLogForDay = useCallback((date: string) => {
+  setActiveDate(date);
+  setLogOpen(true);
+}, []);
+
+const closeLog = useCallback(() => {
+  setLogOpen(false);
+  setActiveDate(null);
+}, []);
+
+const saveLog = useCallback(
+  (html: string) => {
+    if (!activeDate) return;
+
+    const next = { ...notes };
+
+    // boşsa sil (text'e çevirip trim)
+    const plain = (html || "").replace(/<[^>]*>/g, "").trim();
+    if (!plain) delete next[activeDate];
+    else next[activeDate] = html;
+
+    persistNotes(next);
+    closeLog();
+  },
+  [activeDate, notes, persistNotes, closeLog]
+);
+
+
+
 
   // Top summary (optional)
   const monthNet = useMemo(
@@ -205,15 +287,28 @@ export default function DailyJournalV2() {
 
     {dayGroups.map((g) => (
       <DayAccordionRow
-        key={g.date}
-        group={g}
-        trades={tradesByDay[g.date] || []}
-        open={!!openDays[g.date]}
-        onToggle={() => toggleDay(g.date)}
-      />
+  key={g.date}
+  group={g}
+  trades={tradesByDay[g.date] || []}
+  open={!!openDays[g.date]}
+  onToggle={() => toggleDay(g.date)}
+  hasNote={!!notes[g.date]}
+  onOpenNote={() => openLogForDay(g.date)}
+/>
+
+
     ))}
   </div>
 </div>
+<DailyLogModalV2
+  open={logOpen}
+  date={activeDate}
+  trades={activeDate ? tradesByDay[activeDate] || [] : []}
+  initialHtml={activeDate ? notes[activeDate] || "" : ""}
+  onClose={closeLog}
+  onSave={saveLog}
+/>
+
 
 
           {/* RIGHT: MINI CALENDAR */}
@@ -307,12 +402,18 @@ function DayAccordionRow({
   trades,
   open,
   onToggle,
+  hasNote,
+  onOpenNote,
 }: {
   group: DayGroup;
-  trades: typeof fakeTrades;
+  trades: (typeof fakeTrades)[number][];
+
   open: boolean;
   onToggle: () => void;
+  hasNote: boolean;
+  onOpenNote: () => void;
 }) {
+
   
   const positive = group.netPnl >= 0;
   const winTrades = trades.filter((t) => t.pnlUsd > 0);
@@ -347,7 +448,7 @@ const totalRisk = trades.reduce((s, t) => s + (t.riskUsd ?? 0), 0);
     <Chevron open={open} />
 
     <div className="flex items-center gap-3">
-      <div className="text-[13px] font-semibold text-slate-900 flex items-center">
+      <div className="text-[13px] font-bold text-slate-900 flex items-center">
   {formatHeaderDate(group.date)}
   <span className="ml-2 -mr-0.5 text-slate-300">•</span>
 </div>
@@ -357,7 +458,7 @@ const totalRisk = trades.reduce((s, t) => s + (t.riskUsd ?? 0), 0);
       <div className="text-[13px] font-semibold flex items-center">
   <span
     className={`mr-1.5 ${
-      positive ? "text-[#14b8a6]" : "text-rose-700"
+      positive ? "text-[#14b8a6]" : "text-rose-600"
     }`}
   >
     Net P&L
@@ -365,7 +466,7 @@ const totalRisk = trades.reduce((s, t) => s + (t.riskUsd ?? 0), 0);
 
   <span
     className={`${
-      positive ? "text-[#14b8a6]" : "text-rose-700"
+      positive ? "text-[#14b8a6]" : "text-rose-600"
     }`}
   >
     {formatUsd(group.netPnl)}
@@ -378,10 +479,21 @@ const totalRisk = trades.reduce((s, t) => s + (t.riskUsd ?? 0), 0);
   </button>
 
   <div className="flex items-center gap-2">
-  <button className="h-8 px-3 flex items-center rounded-lg border border-slate-200 bg-white text-[12px] text-slate-700 hover:bg-slate-50">
-    View Note
+  <button
+    onClick={(e) => {
+      e.stopPropagation(); // accordion toggle olmasın
+      onOpenNote();
+    }}
+    className={`h-8 px-3 flex items-center rounded-lg border text-[12px] font-medium hover:bg-slate-50 ${
+      hasNote
+        ? "border-slate-200 bg-white text-slate-700"
+        : "border-violet-200 bg-violet-50 text-violet-700"
+    }`}
+  >
+    {hasNote ? "View Note" : "+ Add Note"}
   </button>
 </div>
+
 
 </div>
 
@@ -444,9 +556,11 @@ const totalRisk = trades.reduce((s, t) => s + (t.riskUsd ?? 0), 0);
             <div className="text-[12px] text-slate-500">
               No trades on this day.
             </div>
+            
           ) : (
             <div className="rounded-lg border border-slate-200 overflow-hidden">
-              <div className="grid grid-cols-16 gap-0 bg-slate-50 text-[10px] font-semibold text-slate-600 px-3 py-2">
+              <div className="grid grid-cols-18 gap-0 bg-slate-200/60 text-[10.5px] font-semibold text-slate-900 px-3 py-2">
+
   <div className="col-span-2">Open Time</div>
   <div className="col-span-2">Ticker</div>
   <div className="col-span-2">Direction</div>
@@ -455,7 +569,9 @@ const totalRisk = trades.reduce((s, t) => s + (t.riskUsd ?? 0), 0);
   <div className="col-span-2">Volume</div>
   <div className="col-span-2">PnL</div>
   <div className="col-span-2">Net ROI</div>
-  <div className="col-span-1 text-right">Result</div>
+<div className="col-span-2">Duration</div>
+<div className="col-span-1 text-right">Result</div>
+
 </div>
 
 
@@ -468,8 +584,9 @@ const totalRisk = trades.reduce((s, t) => s + (t.riskUsd ?? 0), 0);
                     
                     <button
   key={t.id}
-  className="w-full text-left grid grid-cols-16 px-3 py-2 text-[12px] hover:bg-slate-50 transition"
+  className="w-full text-left grid grid-cols-18 px-3 py-2 text-[12px] hover:bg-slate-50 transition"
 >
+
 
   {/* OPEN TIME */}
   <div className="col-span-2 text-slate-700 tabular-nums">
@@ -478,7 +595,7 @@ const totalRisk = trades.reduce((s, t) => s + (t.riskUsd ?? 0), 0);
   </div>
 
   {/* SYMBOL */}
-  <div className="col-span-2 font-semibold text-slate-900">
+  <div className="col-span-2  text-slate-900">
     {t.symbol}
   </div>
 
@@ -505,17 +622,14 @@ const totalRisk = trades.reduce((s, t) => s + (t.riskUsd ?? 0), 0);
                       </div>
 
                       <div
-                        className={`col-span-2 tabular-nums font-semibold ${
-                          pnlPos ? "text-emerald-700" : "text-rose-700"
-                        }`}
-                      >
-                        {formatUsd(t.pnlUsd)}
-                        <span className="text-[10px] text-slate-500 font-medium ml-2">
-                          ({t.pnlR >= 0 ? "+" : ""}
-                          {t.pnlR.toFixed(2)}R)
-                        </span>
-                      </div>
-{/* NET ROI (trade) */}
+  className={`col-span-2 tabular-nums font-semibold ${
+    pnlPos ? "text-emerald-700" : "text-rose-700"
+  }`}
+>
+  {formatUsd(t.pnlUsd)}
+</div>
+
+{/* NET ROI */}
 <div
   className={`col-span-2 tabular-nums font-semibold ${
     (() => {
@@ -524,7 +638,7 @@ const totalRisk = trades.reduce((s, t) => s + (t.riskUsd ?? 0), 0);
         ? "text-slate-500"
         : pct >= 0
         ? "text-emerald-700"
-        : "text-rose-700";
+        : "text-rose-600";
     })()
   }`}
 >
@@ -534,19 +648,26 @@ const totalRisk = trades.reduce((s, t) => s + (t.riskUsd ?? 0), 0);
   })()}
 </div>
 
-                      <div className="col-span-1 text-right">
-                        <span
-                          className={`px-2 py-0.5 rounded-md text-[11px] font-semibold ${
-                            t.result === "win"
-                              ? "bg-emerald-100 text-emerald-800"
-                              : t.result === "loss"
-                              ? "bg-rose-100 text-rose-800"
-                              : "bg-slate-100 text-slate-700"
-                          }`}
-                        >
-                          {t.result.toUpperCase()}
-                        </span>
-                      </div>
+{/* DURATION */}
+<div className="col-span-2 text-slate-700 tabular-nums">
+  {calcDuration(t.raw.openTime, t.raw.closeTime)}
+</div>
+
+{/* RESULT */}
+<div className="col-span-1 text-right">
+  <span
+    className={`px-2 py-0.5 rounded-md text-[11px] font-semibold ${
+      t.result === "win"
+        ? "bg-emerald-100 text-emerald-800"
+        : t.result === "loss"
+        ? "bg-rose-100 text-rose-800"
+        : "bg-slate-100 text-slate-700"
+    }`}
+  >
+    {t.result.toUpperCase()}
+  </span>
+</div>
+
                     </button>
                   );
                 })}

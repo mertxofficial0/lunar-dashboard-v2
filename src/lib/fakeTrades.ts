@@ -3,8 +3,10 @@ import { generateFakeTrades } from "./fakeTradeGenerator";
 export type FakeTrade = {
   id: string;
   date: string;
+  note?: string;
   symbol: string;
   direction: "long" | "short";
+
 
   entry: number;
   exit: number;
