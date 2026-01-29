@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import RichTextEditorV2 from "./RichTextEditorV2";
 
 function formatHeaderDate(dateStr: string) {
@@ -19,6 +19,8 @@ function formatUsd(v: number) {
   return v < 0 ? `-$${abs}` : `$${abs}`;
 }
 
+
+
 export default function DailyLogModalV2({
   open,
   date,
@@ -29,15 +31,36 @@ export default function DailyLogModalV2({
 }: {
   open: boolean;
   date: string | null; // YYYY-MM-DD
-  trades: any[]; // FakeTrade[] (tipi karıştırmamak için any bıraktım)
+  trades: any[]; // FakeTrade[]
   initialHtml: string;
   onClose: () => void;
   onSave: (html: string) => void;
 }) {
   const [html, setHtml] = useState(initialHtml || "");
 
+  // autosave UI state
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
+  const saveTimer = useRef<number | null>(null);
+useEffect(() => {
+  const el = document.getElementById("app-scroll-container");
+  if (!el) return;
+
+  if (open) {
+    el.style.overflow = "hidden";
+  } else {
+    el.style.overflow = "";
+  }
+
+  return () => {
+    el.style.overflow = "";
+  };
+}, [open]);
+
+  // modal açılınca initial’i bas
   useEffect(() => {
-    if (open) setHtml(initialHtml || "");
+    if (!open) return;
+    setHtml(initialHtml || "");
+    setSaveState("idle");
   }, [open, initialHtml]);
 
   const stats = useMemo(() => {
@@ -45,7 +68,7 @@ export default function DailyLogModalV2({
     const winners = trades.filter((t) => t.pnlUsd > 0).length;
     const losers = trades.filter((t) => t.pnlUsd < 0).length;
 
-    const commissionSigned = trades.reduce((s, t) => s + (t.feeUsd ?? 0), 0); // negatif
+    const commissionSigned = trades.reduce((s, t) => s + (t.feeUsd ?? 0), 0);
     const commissionAbs = Math.abs(commissionSigned);
 
     const net = trades.reduce((s, t) => s + (t.pnlUsd ?? 0), 0);
@@ -53,11 +76,10 @@ export default function DailyLogModalV2({
 
     const winrate = totalTrades === 0 ? 0 : (winners / totalTrades) * 100;
 
-    const grossProfit = trades.filter(t => t.pnlUsd > 0).reduce((s, t) => s + t.pnlUsd, 0);
-    const grossLoss = Math.abs(trades.filter(t => t.pnlUsd < 0).reduce((s, t) => s + t.pnlUsd, 0));
+    const grossProfit = trades.filter((t) => t.pnlUsd > 0).reduce((s, t) => s + t.pnlUsd, 0);
+    const grossLoss = Math.abs(trades.filter((t) => t.pnlUsd < 0).reduce((s, t) => s + t.pnlUsd, 0));
     const profitFactor = grossLoss === 0 ? (grossProfit > 0 ? 99.99 : 0) : grossProfit / grossLoss;
 
-    // senin sistemde volume = riskUsd toplamı gibi
     const volume = trades.reduce((s, t) => s + (t.riskUsd ?? 0), 0);
 
     return {
@@ -75,34 +97,79 @@ export default function DailyLogModalV2({
 
   const positive = (stats.net ?? 0) >= 0;
 
+  // ✅ AUTOSAVE: html değişince 800ms sonra kaydet
+  useEffect(() => {
+    if (!open || !date) return;
+
+    // initialHtml ile aynıysa autosave'e gerek yok
+    if ((html || "") === (initialHtml || "")) {
+      setSaveState("idle");
+      return;
+    }
+
+    setSaveState("saving");
+
+    if (saveTimer.current) window.clearTimeout(saveTimer.current);
+
+    saveTimer.current = window.setTimeout(() => {
+      // boşsa yine kaydedelim (senin parent saveLog boşsa siler)
+      onSave(html);
+      setSaveState("saved");
+
+      // 1.2sn sonra “saved” yazısını idle’a çek
+      window.setTimeout(() => setSaveState("idle"), 1200);
+    }, 800);
+
+    return () => {
+      if (saveTimer.current) window.clearTimeout(saveTimer.current);
+    };
+  }, [html, open, date, initialHtml, onSave]);
+
   if (!open || !date) return null;
 
   return (
     <div className="fixed inset-0 z-[999]">
       {/* BACKDROP */}
-      <button
-        className="absolute inset-0 bg-black/30"
-        onClick={onClose}
-        aria-label="Close"
-      />
+      <button className="absolute inset-0 bg-black/50" onClick={onClose} aria-label="Close" />
 
       {/* MODAL */}
       <div
-        className="
-          absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2
-          w-[1100px] max-w-[95vw] h-[90vh]
-          bg-white rounded-2xl shadow-2xl
-          overflow-hidden
-        "
+  className="
+    absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2
+    w-[900px] max-w-[95vw] h-[90vh]
+    bg-white rounded-2xl shadow-2xl
+    overflow-hidden
+    flex flex-col
+  "
+
+
         onClick={(e) => e.stopPropagation()}
       >
         {/* HEADER */}
         <div className="h-14 px-5 border-b border-slate-200 flex items-center justify-between">
-          <div className="text-[16px] font-extrabold text-slate-900">Daily Log</div>
+          <div className="flex items-center gap-3">
+            <div className="text-[16px] font-extrabold text-slate-900">Daily Log</div>
+
+            {/* SAVE STATE BADGE */}
+            <div
+              className={`
+                text-[11px] font-semibold px-2 py-1 rounded-md border
+                ${
+                  saveState === "saving"
+                    ? "bg-amber-50 text-amber-700 border-amber-200"
+                    : saveState === "saved"
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                    : "bg-slate-50 text-slate-600 border-slate-200"
+                }
+              `}
+            >
+              {saveState === "saving" ? "Saving..." : saveState === "saved" ? "Saved ✓" : "Autosave"}
+            </div>
+          </div>
 
           <button
             onClick={onClose}
-            className="h-9 w-9 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 flex items-center justify-center"
+            className="h-9 w-9 rounded-lg   text-slate-700 hover:bg-slate-100 flex items-center justify-center"
             aria-label="Close"
           >
             ✕
@@ -110,7 +177,8 @@ export default function DailyLogModalV2({
         </div>
 
         {/* TOP SUMMARY */}
-        <div className="px-5 py-3 border-b border-slate-200">
+<div className="px-5 py-3">
+
           <div className="flex items-center gap-3 text-[13px]">
             <div className="font-semibold text-slate-700">{formatHeaderDate(date)}</div>
             <div className="text-slate-300">•</div>
@@ -119,13 +187,9 @@ export default function DailyLogModalV2({
             </div>
           </div>
 
-          {/* Chart + stats row */}
           <div className="mt-3 grid grid-cols-12 gap-3 items-stretch">
-            {/* mini chart placeholder (istersen burada DailySpark component koyarız) */}
             <div className="col-span-12 md:col-span-4 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center">
-              <div className="text-[12px] text-slate-500">
-                Chart area (spark/cumulative)
-              </div>
+              <div className="text-[12px] text-slate-500">Chart area (spark/cumulative)</div>
             </div>
 
             <div className="col-span-12 md:col-span-8 grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -141,46 +205,21 @@ export default function DailyLogModalV2({
           </div>
         </div>
 
-        {/* BODY */}
-        <div className="h-[calc(90vh-56px-1px-120px)] px-5 py-4 overflow-y-auto">
-          {/* HIZLI TEMPLATE BUTONLARI */}
-          <div className="mb-3 flex flex-wrap gap-2">
-            <TemplateBtn
-              label="Insert Template"
-              onClick={() => {
-                const tpl = buildTemplateHtml();
-                setHtml((prev) => (prev?.trim() ? prev : tpl));
-              }}
-            />
-            <div className="text-[11px] text-slate-500 flex items-center">
-              (İstersen template otomatik gelsin de yaparız)
-            </div>
-          </div>
+       {/* BODY */}
+<div className="flex-1 min-h-0 flex flex-col px-5 pb-5">
 
-          <RichTextEditorV2 valueHtml={html} onChangeHtml={setHtml} />
-        </div>
+  {/* EDITOR */}
+  <div className="flex-1 min-h-0">
+    <RichTextEditorV2
+      valueHtml={html}
+      onChangeHtml={setHtml}
+    />
+  </div>
 
-        {/* FOOTER */}
-        <div className="h-16 px-5 border-t border-slate-200 flex items-center justify-end gap-2">
-          <button
-            onClick={onClose}
-            className="h-9 px-4 rounded-lg border border-slate-200 bg-white text-[13px] text-slate-700 hover:bg-slate-50"
-          >
-            Cancel
-          </button>
+</div>
 
-          <button
-            onClick={() => onSave(html)}
-            className="
-              h-9 px-4 rounded-lg
-              text-[13px] text-white
-              bg-gradient-to-b from-[#8d6cf0ff] to-[#7C3AED]
-              hover:from-[#7f5fe6] hover:to-[#6D28D9]
-            "
-          >
-            Save
-          </button>
-        </div>
+
+        
       </div>
     </div>
   );
@@ -197,9 +236,7 @@ function TopStat({
 }) {
   return (
     <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
-      <div className="text-[10px] text-slate-500 font-semibold uppercase tracking-wide">
-        {label}
-      </div>
+      <div className="text-[10px] text-slate-500 font-semibold uppercase tracking-wide">{label}</div>
       <div className={`text-[13px] tabular-nums ${strong ? "font-extrabold" : "font-semibold"} text-slate-900`}>
         {value}
       </div>
@@ -207,46 +244,6 @@ function TopStat({
   );
 }
 
-function TemplateBtn({ label, onClick }: { label: string; onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      className="h-8 px-3 rounded-lg border border-slate-200 bg-white text-[12px] text-slate-700 hover:bg-slate-50"
-    >
-      {label}
-    </button>
-  );
-}
 
-function buildTemplateHtml() {
-  // TradeZella tarzı section’lı template
-  return `
-    <h2>🧠 Pre Market game Plan</h2>
-    <p><b>Market</b></p>
-    <ul>
-      <li>News / events:</li>
-      <li>Key levels:</li>
-      <li>Bias:</li>
-    </ul>
-    <p><b>Watchlist</b></p>
-    <ul>
-      <li></li>
-    </ul>
 
-    <h2>🧾 Day Recap</h2>
-    <p><b>Mistakes I made</b></p>
-    <ul><li></li></ul>
 
-    <p><b>What I did great</b></p>
-    <ul><li></li></ul>
-
-    <p><b>Reinforcement to myself</b></p>
-    <ul><li></li></ul>
-
-    <h2>📌 Overall Recap</h2>
-    <ul>
-      <li>1 lesson:</li>
-      <li>1 action for tomorrow:</li>
-    </ul>
-  `;
-}

@@ -208,7 +208,7 @@ const saveLog = useCallback(
     else next[activeDate] = html;
 
     persistNotes(next);
-    closeLog();
+    
   },
   [activeDate, notes, persistNotes, closeLog]
 );

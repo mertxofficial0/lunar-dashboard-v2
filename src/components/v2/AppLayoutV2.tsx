@@ -17,7 +17,11 @@ export default function AppLayoutV2() {
     <div className="flex h-screen w-screen overflow-hidden">
       <SidebarV2 />
 
-      <div className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden">
+      <div
+  id="app-scroll-container"
+  className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden"
+>
+
         {/* TEK HEADER */}
         <DashboardHeaderV2 title={title} />
 
