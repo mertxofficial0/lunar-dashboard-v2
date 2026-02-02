@@ -146,14 +146,16 @@ useEffect(() => {
         onClick={(e) => e.stopPropagation()}
       >
         {/* HEADER */}
-        <div className="h-14 px-5 border-b border-slate-200 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="h-12 px-1.5 border-b border-slate-200 flex items-center justify-between">
+          <div className="flex items-center gap-3 ml-2">
+
             <div className="text-[16px] font-extrabold text-slate-900">Daily Log</div>
 
             {/* SAVE STATE BADGE */}
             <div
               className={`
-                text-[11px] font-semibold px-2 py-1 rounded-md border
+                text-[10px] px-1 py-0.5
+ font-medium px-2 py-1 rounded-md border
                 ${
                   saveState === "saving"
                     ? "bg-amber-50 text-amber-700 border-amber-200"
@@ -169,7 +171,7 @@ useEffect(() => {
 
           <button
             onClick={onClose}
-            className="h-9 w-9 rounded-lg   text-slate-700 hover:bg-slate-100 flex items-center justify-center"
+            className="cursor-pointer h-9 w-9 rounded-lg text-slate-700 hover:bg-slate-100 flex items-center justify-center"
             aria-label="Close"
           >
             ✕
@@ -177,7 +179,7 @@ useEffect(() => {
         </div>
 
         {/* TOP SUMMARY */}
-<div className="px-5 py-3">
+<div className="px-3 py-3">
 
           <div className="flex items-center gap-3 text-[13px]">
             <div className="font-semibold text-slate-700">{formatHeaderDate(date)}</div>
@@ -187,12 +189,12 @@ useEffect(() => {
             </div>
           </div>
 
-          <div className="mt-3 grid grid-cols-12 gap-3 items-stretch">
+          <div className="mt-2 grid grid-cols-12 gap-2.5 items-stretch">
             <div className="col-span-12 md:col-span-4 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center">
               <div className="text-[12px] text-slate-500">Chart area (spark/cumulative)</div>
             </div>
 
-            <div className="col-span-12 md:col-span-8 grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="col-span-12 md:col-span-8 grid grid-cols-2 md:grid-cols-4 gap-2.5">
               <TopStat label="Total Trades" value={stats.totalTrades} />
               <TopStat label="Winners" value={stats.winners} />
               <TopStat label="Losers" value={stats.losers} />
@@ -206,7 +208,7 @@ useEffect(() => {
         </div>
 
        {/* BODY */}
-<div className="flex-1 min-h-0 flex flex-col px-5 pb-5">
+<div className="flex-1 min-h-0 flex flex-col px-3 pb-3">
 
   {/* EDITOR */}
   <div className="flex-1 min-h-0">
