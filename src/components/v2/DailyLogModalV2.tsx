@@ -1,5 +1,9 @@
-import React, { useMemo, useState, useEffect, useRef } from "react";
-import RichTextEditorV2 from "./RichTextEditorV2";
+
+import React, { useMemo, useState, useEffect, useRef, Suspense } from "react";
+import MiniPnLAreaLite from "./MiniPnLAreaLite";
+
+const RichTextEditorV2 = React.lazy(() => import("./RichTextEditorV2"));
+
 
 function formatHeaderDate(dateStr: string) {
   const d = new Date(dateStr);
@@ -37,11 +41,13 @@ export default function DailyLogModalV2({
   onSave: (html: string) => void;
 }) {
   const [html, setHtml] = useState(initialHtml || "");
-
+const hasEdited = useRef(false);
   // autosave UI state
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
   const saveTimer = useRef<number | null>(null);
+  
 useEffect(() => {
+  
   const el = document.getElementById("app-scroll-container");
   if (!el) return;
 
@@ -64,9 +70,24 @@ useEffect(() => {
   }, [open, initialHtml]);
 
   const stats = useMemo(() => {
+  if (!open) {
+    return {
+      totalTrades: 0,
+      winners: 0,
+      losers: 0,
+      gross: 0,
+      net: 0,
+      commissionAbs: 0,
+      winrate: 0,
+      volume: 0,
+      profitFactor: 0,
+    };
+  }
+
     const totalTrades = trades.length;
     const winners = trades.filter((t) => t.pnlUsd > 0).length;
     const losers = trades.filter((t) => t.pnlUsd < 0).length;
+
 
     const commissionSigned = trades.reduce((s, t) => s + (t.feeUsd ?? 0), 0);
     const commissionAbs = Math.abs(commissionSigned);
@@ -99,31 +120,29 @@ useEffect(() => {
 
   // ✅ AUTOSAVE: html değişince 800ms sonra kaydet
   useEffect(() => {
-    if (!open || !date) return;
+  if (!open || !date) return;
+  if (!hasEdited.current) return; // ✅ ÇOK ÖNEMLİ
 
-    // initialHtml ile aynıysa autosave'e gerek yok
-    if ((html || "") === (initialHtml || "")) {
-      setSaveState("idle");
-      return;
-    }
+  if ((html || "") === (initialHtml || "")) {
+    setSaveState("idle");
+    return;
+  }
 
-    setSaveState("saving");
+  setSaveState("saving");
 
+  if (saveTimer.current) window.clearTimeout(saveTimer.current);
+
+  saveTimer.current = window.setTimeout(() => {
+    onSave(html);
+    setSaveState("saved");
+    window.setTimeout(() => setSaveState("idle"), 1200);
+  }, 800);
+
+  return () => {
     if (saveTimer.current) window.clearTimeout(saveTimer.current);
+  };
+}, [html, open, date, initialHtml, onSave]);
 
-    saveTimer.current = window.setTimeout(() => {
-      // boşsa yine kaydedelim (senin parent saveLog boşsa siler)
-      onSave(html);
-      setSaveState("saved");
-
-      // 1.2sn sonra “saved” yazısını idle’a çek
-      window.setTimeout(() => setSaveState("idle"), 1200);
-    }, 800);
-
-    return () => {
-      if (saveTimer.current) window.clearTimeout(saveTimer.current);
-    };
-  }, [html, open, date, initialHtml, onSave]);
 
   if (!open || !date) return null;
 
@@ -170,12 +189,25 @@ useEffect(() => {
           </div>
 
           <button
-            onClick={onClose}
-            className="cursor-pointer h-9 w-9 rounded-lg text-slate-700 hover:bg-slate-100 flex items-center justify-center"
-            aria-label="Close"
-          >
-            ✕
-          </button>
+  onClick={onClose}
+  className="
+    cursor-pointer
+    h-9
+    w-9
+    mt-1
+
+    rounded-lg
+    text-slate-700
+    hover:bg-slate-200/60
+    flex
+    items-center
+    justify-center
+  "
+  aria-label="Close"
+>
+  ✕
+</button>
+
         </div>
 
         {/* TOP SUMMARY */}
@@ -190,9 +222,10 @@ useEffect(() => {
           </div>
 
           <div className="mt-2 grid grid-cols-12 gap-2.5 items-stretch">
-            <div className="col-span-12 md:col-span-4 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center">
-              <div className="text-[12px] text-slate-500">Chart area (spark/cumulative)</div>
-            </div>
+            <div className="col-span-12 md:col-span-4 rounded-xl border border-slate-200 bg-white p-2">
+  <MiniPnLAreaLite trades={trades} height={120} />
+</div>
+
 
             <div className="col-span-12 md:col-span-8 grid grid-cols-2 md:grid-cols-4 gap-2.5">
               <TopStat label="Total Trades" value={stats.totalTrades} />
@@ -212,10 +245,23 @@ useEffect(() => {
 
   {/* EDITOR */}
   <div className="flex-1 min-h-0">
-    <RichTextEditorV2
-      valueHtml={html}
-      onChangeHtml={setHtml}
-    />
+    <Suspense
+  fallback={
+    <div className="h-full flex items-center justify-center text-slate-400 text-sm">
+      Editor loading...
+    </div>
+  }
+>
+  <RichTextEditorV2
+    valueHtml={html}
+    onChangeHtml={(v) => {
+  hasEdited.current = true;
+  setHtml(v);
+}}
+
+  />
+</Suspense>
+
   </div>
 
 </div>
@@ -237,14 +283,23 @@ function TopStat({
   strong?: boolean;
 }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
-      <div className="text-[10px] text-slate-500 font-semibold uppercase tracking-wide">{label}</div>
-      <div className={`text-[13px] tabular-nums ${strong ? "font-extrabold" : "font-semibold"} text-slate-900`}>
+    <div className="rounded-xl border border-slate-200 bg-white px-2.5 py-2">
+      <div className="text-[10px] text-slate-500 font-semibold uppercase tracking-wide">
+        {label}
+      </div>
+
+      {/* 👇 sadece buraya ekledik */}
+      <div
+        className={`mt-2 text-[13px] tabular-nums ${
+          strong ? "font-extrabold" : "font-semibold"
+        } text-slate-900`}
+      >
         {value}
       </div>
     </div>
   );
 }
+
 
 
 

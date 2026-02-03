@@ -31,6 +31,7 @@ function ymd(year: number, month0: number, day: number) {
 }
 
 export default function CalendarMiniV2({
+  
   currentDate,
 }: {
   currentDate: Date;

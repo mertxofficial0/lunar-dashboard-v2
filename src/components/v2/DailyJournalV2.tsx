@@ -1,8 +1,10 @@
 import React, { useMemo, useState, useCallback } from "react";
 
 import CalendarMiniV2 from "./CalendarMiniV2";
-import MiniNetPnLSparkV2 from "./MiniNetPnLSparkV2";
+
 import DailyLogModalV2 from "./DailyLogModalV2";
+
+import MiniPnLAreaLite from "./MiniPnLAreaLite";
 
 import { fakeTrades } from "../../lib/fakeTrades";
 
@@ -10,6 +12,7 @@ import { fakeTrades } from "../../lib/fakeTrades";
 /* ======================
    HELPERS
 ====================== */
+
 function calcDuration(openTime: string, closeTime: string) {
   const open = new Date(openTime.replace(" ", "T"));
   const close = new Date(closeTime.replace(" ", "T"));
@@ -153,8 +156,15 @@ export default function DailyJournalV2() {
   const [openDays, setOpenDays] = useState<Record<string, boolean>>({});
 
   const toggleDay = useCallback((date: string) => {
-    setOpenDays((p) => ({ ...p, [date]: !p[date] }));
-  }, []);
+  // 1️⃣ UI ANINDA tepki verir
+  setOpenDays((p) => ({ ...p, [date]: !p[date] }));
+
+  // 2️⃣ ağır işler bir frame SONRA
+  requestAnimationFrame(() => {
+    // boş bırakıyoruz ama React burada rahatlıyor
+  });
+}, []);
+
 
   const expandAll = useCallback(() => {
     const next: Record<string, boolean> = {};
@@ -187,14 +197,25 @@ const [logOpen, setLogOpen] = useState(false);
 const [activeDate, setActiveDate] = useState<string | null>(null);
 
 const openLogForDay = useCallback((date: string) => {
-  setActiveDate(date);
-  setLogOpen(true);
+  setLogOpen(true); // pencere ANINDA açılır
+
+  // içeriği bir tık sonra yükle
+  requestAnimationFrame(() => {
+    setActiveDate(date);
+  });
 }, []);
 
+
 const closeLog = useCallback(() => {
+  // 1️⃣ GÖZDEN ANINDA KAYBOLUR
   setLogOpen(false);
-  setActiveDate(null);
+
+  // 2️⃣ AĞIR TEMİZLİK SONRA
+  setTimeout(() => {
+    setActiveDate(null);
+  }, 120);
 }, []);
+
 
 const saveLog = useCallback(
   (html: string) => {
@@ -239,7 +260,7 @@ const saveLog = useCallback(
                 Month net:{" "}
                 <span
                   className={
-                    monthNet >= 0 ? "text-emerald-700 font-semibold" : "text-rose-700 font-semibold"
+                    monthNet >= 0 ? "text-[#0fa89a] font-semibold" : "text-[#e1395f] font-semibold"
                   }
                 >
                   {formatUsd(monthNet)}
@@ -249,27 +270,63 @@ const saveLog = useCallback(
           </div>
 
           <div className="flex items-center gap-2">
-            <button className="h-8.5 px-3 rounded-lg border border-slate-200 bg-white text-[13px] text-slate-700 hover:bg-slate-50">
+            <button className="h-8.5 px-3 rounded-lg border border-slate-200 bg-white text-[13px] text-slate-700 hover:bg-slate-50 cursor-pointer
+">
               Filters
             </button>
 
             <button
               onClick={expandAll}
-              className="h-8.5 px-3 rounded-lg border border-slate-200 bg-white text-[13px] text-slate-700 hover:bg-slate-50"
+              className="h-8.5 px-3 rounded-lg border border-slate-200 bg-white text-[13px] text-slate-700 hover:bg-slate-50 cursor-pointer
+"
             >
               Expand all
             </button>
 
             <button
               onClick={collapseAll}
-              className="h-8.5 px-3 rounded-lg border border-slate-200 bg-white text-[13px] text-slate-700 hover:bg-slate-50"
+              className="h-8.5 px-3 rounded-lg border border-slate-200 bg-white text-[13px] text-slate-700 hover:bg-slate-50 cursor-pointer"
             >
               Collapse all
             </button>
 
-            <button className="h-8.5 px-3.5 rounded-lg text-[13px] text-white bg-gradient-to-b from-[#8d6cf0ff] to-[#7C3AED] hover:from-[#7f5fe6] hover:to-[#6D28D9]">
-              + Log Day
-            </button>
+            <button
+  onClick={(e) => {
+    const button = e.currentTarget;
+    const rect = button.getBoundingClientRect();
+
+    const ripple = document.createElement("span");
+    ripple.className = "ripple";
+
+    const size = Math.max(rect.width, rect.height);
+    ripple.style.width = ripple.style.height = `${size}px`;
+
+    ripple.style.left = `${e.clientX - rect.left - size / 2}px`;
+    ripple.style.top = `${e.clientY - rect.top - size / 2}px`;
+
+    button.appendChild(ripple);
+
+    setTimeout(() => {
+      ripple.remove();
+    }, 1100);
+
+    // 🔥 ASIL LOG DAY AKSİYONU
+    // openLogForDay(...)
+  }}
+  className="
+    ripple-container
+    h-8.5 px-3.5 rounded-lg
+    text-[13px] font-medium text-white
+    bg-gradient-to-b from-[#8d6cf0ff] to-[#7C3AED]
+    hover:from-[#7f5fe6] hover:to-[#6D28D9]
+    transition
+    cursor-pointer
+
+  "
+>
+  + Log Day
+</button>
+
           </div>
         </div>
 
@@ -390,6 +447,7 @@ const saveLog = useCallback(
           </div>
         </div>
       </div>
+      
     </div>
   );
 }
@@ -440,278 +498,287 @@ function DayAccordionRow({
 const totalRisk = trades.reduce((s, t) => s + (t.riskUsd ?? 0), 0);
 
  
-  return (
-    <div className="bg-white rounded-xl px-3 py-1 shadow-[0_1px_1px_rgba(0,0,0,0.03)] ">
-      {/* HEADER */}
-      <div className="flex items-center justify-between min-h-[44px] py-1">
-  <button onClick={onToggle} className="flex items-center gap-3 text-left">
-    <Chevron open={open} />
+ return (
+  <div className="bg-white rounded-xl px-3 py-3 pt-1 shadow-[0_1px_1px_rgba(0,0,0,0.03)]">
 
-    <div className="flex items-center gap-3">
-      <div className="text-[13px] font-bold text-slate-900 flex items-center">
-  {formatHeaderDate(group.date)}
-  <span className="ml-2 -mr-0.5 text-slate-300">•</span>
-</div>
+    {/* HEADER */}
+    <div className="flex items-center justify-between min-h-[44px] py-1">
+      <button onClick={onToggle} className="flex items-center gap-3 text-left">
+        <Chevron open={open} />
 
+        <div className="flex items-center gap-3">
+          <div className="text-[14px] font-semibold text-slate-900 flex items-center">
+            {formatHeaderDate(group.date)}
+            <span className="ml-2 -mr-0.5 text-slate-300">•</span>
+          </div>
 
-
-      <div className="text-[13px] font-semibold flex items-center">
-  <span
-    className={`mr-1.5 ${
-      positive ? "text-[#14b8a6]" : "text-rose-600"
-    }`}
-  >
-    Net P&L
-  </span>
-
-  <span
-    className={`${
-      positive ? "text-[#14b8a6]" : "text-rose-600"
-    }`}
-  >
-    {formatUsd(group.netPnl)}
-  </span>
-</div>
+          <div className="text-[14px] font-semibold flex items-center">
+            <span className={`mr-1.5 ${positive ? "text-[#0fa89a]" : "text-[#e1395f]"}`}>
+              Net P&L
+            </span>
+            <span className={positive ? "text-[#0fa89a]" : "text-[#e1395f]"}>
+              {formatUsd(group.netPnl)}
+            </span>
+          </div>
+        </div>
+      </button>
 
 
-      
-    </div>
-  </button>
-
-  <div className="flex items-center gap-2">
-  <button
-    onClick={(e) => {
-      e.stopPropagation(); // accordion toggle olmasın
-      onOpenNote();
-    }}
-    className={`h-8 px-3 flex items-center rounded-lg border text-[12px] font-medium hover:bg-slate-50 ${
+      <button
+  onClick={(e) => {
+    e.stopPropagation();
+    onOpenNote();
+  }}
+  className={`
+    h-8
+    px-3.5
+    rounded-lg
+    flex
+    items-center
+    gap-1.5
+    text-[11px]
+    font-medium
+    transition
+    cursor-pointer
+    ${
       hasNote
-        ? "border-slate-200 bg-white text-slate-700"
-        : "border-violet-200 bg-violet-50 text-violet-700"
-    }`}
-  >
-    {hasNote ? "View Note" : "+ Add Note"}
-  </button>
-</div>
+        ? "bg-slate-200/80 text-slate-600 hover:bg-slate-300/70"
+        : "bg-violet-200/80   text-violet-500 hover:bg-violet-300/70"
+    }
+  `}
+>
+  <JournalNotebookIcon />
+  <span>{hasNote ? "View Note" : "Add Note"}</span>
+</button>
 
 
-</div>
 
+    </div>
 
-      {/* BODY */}
-      {open && (
-  <div className="mt-4">
-    {/* DIVIDER */}
-    <div className="-mt-3 mb-3 -mx-3">
-  <div className="h-px bg-slate-200" />
-</div>
-
-    <div className="grid grid-cols-12 gap-2">
-      {/* LEFT MINI CHART PLACEHOLDER */}
-      
+    {/* MINI CHART + STATS (HER ZAMAN GÖRÜNÜR) */}
+    <div className="mt-1 grid grid-cols-12 gap-3">
       <div className="col-span-12 lg:col-span-2">
-        
-        <MiniNetPnLSparkV2 trades={trades} />
+        <MiniPnLAreaLite trades={trades} />
+
+
+
+
 
       </div>
 
-      {/* STATS */}
       <div className="col-span-12 lg:col-span-10">
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 -mt-0">
-
-  <MiniStat label="Total Trades" value={group.tradeCount} />
-  <MiniStat label="Winners" value={group.winners} tone="neutral" />
-<MiniStat label="Losers" value={group.losers} tone="neutral" />
-
-  <MiniStat label="Breakeven" value={group.breakeven} tone="muted" />
-  <MiniStat
-    label="Volume"
-    value={`$${totalRisk.toLocaleString("en-US", {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    })}`}
-    tone="muted"
-  />
-</div>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <MiniStat label="Total Trades" value={group.tradeCount} />
+          <MiniStat label="Winners" value={group.winners} />
+          <MiniStat label="Losers" value={group.losers} />
+          <MiniStat label="Breakeven" value={group.breakeven} />
+          <MiniStat
+            label="Volume"
+            value={`$${totalRisk.toLocaleString("en-US")}`}
+          />
+        </div>
 
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-3">
-  <MiniStat label="Win Rate" value={`${winRate.toFixed(1)}%`} tone="neutral"/>
-  <MiniStat label="Profit Factor" value={profitFactor.toFixed(2)} tone="neutral"/>
-  <MiniStat label="Commission" value={`-$${commissionAbs.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} tone="muted" />
-  <MiniStat label="Gross PnL" value={formatUsd(grossPnl)} tone={grossPnl >= 0 ? "good" : "bad"} />
-  <MiniStat label="Net PnL" value={formatUsd(netPnl)} tone={netPnl >= 0 ? "good" : "bad"} />
-</div>
+          <MiniStat label="Win Rate" value={`${winRate.toFixed(1)}%`} />
+          <MiniStat label="Profit Factor" value={profitFactor.toFixed(2)} />
+          <MiniStat
+            label="Commission"
+            value={`-$${commissionAbs.toFixed(2)}`}
+            tone="muted"
+          />
+          <MiniStat
+  label="Gross PnL"
+  value={formatUsd(grossPnl)}
+  tone={grossPnl >= 0 ? "good" : "bad"}
+  direction={grossPnl >= 0 ? "up" : "down"}
+/>
 
+          <MiniStat
+  label="Net PnL"
+  value={formatUsd(netPnl)}
+  tone={netPnl >= 0 ? "good" : "bad"}
+  direction={netPnl >= 0 ? "up" : "down"}
+/>
 
+        </div>
       </div>
+    </div>
 
-      {/* TRADES TABLE - FULL WIDTH (EN ALT) */}
-      <div className="col-span-12">
+    {/* TRADE LIST (SADECE AÇIKKEN) */}
+    {open && (
+      <div className="mt-3">
         
 
-        <div className="mt-1">
-          
-
-          {trades.length === 0 ? (
-            <div className="text-[12px] text-slate-500">
-              No trades on this day.
+        {trades.length === 0 ? (
+          <div className="text-[12px] text-slate-500">
+            No trades on this day.
+          </div>
+        ) : (
+          <div className="rounded-lg border border-slate-200 overflow-hidden">
+            <div className="grid grid-cols-18 bg-slate-200/60 text-[10.5px] font-semibold px-3 py-2">
+              <div className="col-span-2">Open Time</div>
+              <div className="col-span-2">Ticker</div>
+              <div className="col-span-2">Direction</div>
+              <div className="col-span-3">Entry → Exit</div>
+              <div className="col-span-2">Volume</div>
+              <div className="col-span-2">PnL</div>
+              <div className="col-span-2">Net ROI</div>
+              <div className="col-span-2">Duration</div>
+              <div className="col-span-1 text-right">Result</div>
             </div>
-            
-          ) : (
-            <div className="rounded-lg border border-slate-200 overflow-hidden">
-              <div className="grid grid-cols-18 gap-0 bg-slate-200/60 text-[10.5px] font-semibold text-slate-900 px-3 py-2">
 
-  <div className="col-span-2">Open Time</div>
-  <div className="col-span-2">Ticker</div>
-  <div className="col-span-2">Direction</div>
-  <div className="col-span-3">Entry → Exit</div>
+            <div className="divide-y divide-slate-200">
+              {trades.map((t) => {
+                const pnlPos = t.pnlUsd >= 0;
 
-  <div className="col-span-2">Volume</div>
-  <div className="col-span-2">PnL</div>
-  <div className="col-span-2">Net ROI</div>
-<div className="col-span-2">Duration</div>
-<div className="col-span-1 text-right">Result</div>
-
-</div>
-
-
-
-              <div className="divide-y divide-slate-200">
-                {trades.map((t) => {
-                  const pnlPos = t.pnlUsd >= 0;
-                  
-                  return (
-                    
-                    <button
-  key={t.id}
-  className="w-full text-left grid grid-cols-18 px-3 py-2 text-[12px] hover:bg-slate-50 transition"
->
-
-
-  {/* OPEN TIME */}
-  <div className="col-span-2 text-slate-700 tabular-nums">
-    {t.raw.openTime.slice(11, 19)}
-
-  </div>
-
-  {/* SYMBOL */}
-  <div className="col-span-2  text-slate-900">
-    {t.symbol}
-  </div>
-
-
-                      <div className="col-span-2">
-                        <span
-                          className={`px-2 py-0.5 rounded-md text-[11px] font-semibold ${
-                            t.direction === "long"
-                              ? "bg-emerald-100 text-emerald-800"
-                              : "bg-rose-100 text-rose-800"
-                          }`}
-                        >
-                          {t.direction.toUpperCase()}
-                        </span>
-                      </div>
-
-                      <div className="col-span-3 text-slate-700 tabular-nums">
-  {formatNum(t.entry)} → {formatNum(t.exit)}
-</div>
-
-
-                      <div className="col-span-2 text-slate-700 tabular-nums">
-                        ${formatNum(Math.round(t.riskUsd))}
-                      </div>
-
-                      <div
-  className={`col-span-2 tabular-nums font-semibold ${
-    pnlPos ? "text-emerald-700" : "text-rose-700"
-  }`}
->
-  {formatUsd(t.pnlUsd)}
-</div>
-
-{/* NET ROI */}
-<div
-  className={`col-span-2 tabular-nums font-semibold ${
-    (() => {
-      const pct = calcTradeNetRoiPct(t);
-      return pct === null
-        ? "text-slate-500"
-        : pct >= 0
-        ? "text-emerald-700"
-        : "text-rose-600";
-    })()
-  }`}
->
-  {(() => {
-    const pct = calcTradeNetRoiPct(t);
-    return pct === null ? "--" : formatPct(pct);
-  })()}
-</div>
-
-{/* DURATION */}
-<div className="col-span-2 text-slate-700 tabular-nums">
-  {calcDuration(t.raw.openTime, t.raw.closeTime)}
-</div>
-
-{/* RESULT */}
-<div className="col-span-1 text-right">
-  <span
-    className={`px-2 py-0.5 rounded-md text-[11px] font-semibold ${
-      t.result === "win"
-        ? "bg-emerald-100 text-emerald-800"
-        : t.result === "loss"
-        ? "bg-rose-100 text-rose-800"
-        : "bg-slate-100 text-slate-700"
-    }`}
-  >
-    {t.result.toUpperCase()}
-  </span>
-</div>
-
-                    </button>
-                  );
-                })}
-              </div>
+                return (
+                  <div
+                    key={t.id}
+                    className="grid grid-cols-18 px-3 py-2 text-[12px] hover:bg-slate-50"
+                  >
+                    <div className="col-span-2">{t.raw.openTime.slice(11, 19)}</div>
+                    <div className="col-span-2">{t.symbol}</div>
+                    <div className="col-span-2">
+                      <span className={`px-2 py-0.5 rounded-md text-[11px] font-semibold ${
+                        t.direction === "long"
+                          ? "bg-emerald-100 text-[#0fa89a]"
+                          : "bg-rose-100 text-[#e1395f]"
+                      }`}>
+                        {t.direction.toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="col-span-3">
+                      {formatNum(t.entry)} → {formatNum(t.exit)}
+                    </div>
+                    <div className="col-span-2">
+                      ${formatNum(Math.round(t.riskUsd))}
+                    </div>
+                    <div className={`col-span-2 font-semibold ${
+                      pnlPos ? "text-[#0fa89a]" : "text-[#e1395f]"
+                    }`}>
+                      {formatUsd(t.pnlUsd)}
+                    </div>
+                    <div className="col-span-2">
+                      {(() => {
+                        const pct = calcTradeNetRoiPct(t);
+                        return pct === null ? "--" : formatPct(pct);
+                      })()}
+                    </div>
+                    <div className="col-span-2">
+                      {calcDuration(t.raw.openTime, t.raw.closeTime)}
+                    </div>
+                    <div className="col-span-1 text-right">
+                      {t.result.toUpperCase()}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          )}
-        </div>
-
-        <div className="mt-2 text-[11px] text-slate-500">
-          
-        </div>
+          </div>
+        )}
       </div>
-    </div>
+    )}
   </div>
-)}
+);
 
-    </div>
-  );
 }
 
 /* ======================
    UI PARTS
 ====================== */
+function JournalNotebookIcon() {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {/* notebook body */}
+      <rect x="4" y="4" width="16" height="16" rx="3" />
+
+      {/* spiral rings */}
+      <line x1="9" y1="2.5" x2="9" y2="6" />
+      <line x1="15" y1="2.5" x2="15" y2="6" />
+
+      
+
+      {/* note lines */}
+      <path d="M7.5 11h8" />
+      <path d="M7.5 14.5h5" />
+    </svg>
+  );
+}
+
+
+
+
+function TrendUpIcon() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M3 17l6-6 4 4 7-7" />
+      <path d="M14 8h7v7" />
+    </svg>
+  );
+}
+
+
+function TrendDownIcon() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M3 7l6 6 4-4 7 7" />
+      <path d="M14 16h7v-7" />
+    </svg>
+  );
+}
+
 function MiniStat({
   label,
   value,
   tone = "neutral",
+  direction, // 👈 EKLENDİ
 }: {
   label: string;
   value: React.ReactNode;
   tone?: "good" | "bad" | "neutral" | "muted";
+  direction?: "up" | "down";
 }) {
+
   const toneClass =
   tone === "good"
-    ? "text-emerald-700"
+    ? "text-[#0fa89a]"
     : tone === "bad"
-    ? "text-rose-700"
+    ? "text-[#e1395f]"
     : tone === "muted"
     ? "text-slate-800"
     : "text-black";
 
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
+  <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 flex items-center justify-between">
+    <div>
       <div className="text-[10px] text-slate-500 font-semibold uppercase tracking-wide">
         {label}
       </div>
@@ -719,14 +786,28 @@ function MiniStat({
         {value}
       </div>
     </div>
-  );
+
+    {direction === "up" && (
+  <div className="text-[#0fa89a]">
+    <TrendUpIcon />
+  </div>
+)}
+
+    {direction === "down" && (
+  <div className="text-rose-600">
+    <TrendDownIcon />
+  </div>
+)}
+  </div>
+);
+
 }
 
 
 function Chevron({ open }: { open: boolean }) {
   return (
     <div
-  className={`w-8 h-8 rounded-lg flex items-center justify-center transition ${
+  className={`w-8 h-8 rounded-lg flex cursor-pointer items-center justify-center transition ${
     open ? "rotate-90" : "rotate-0"
   } bg-slate-100 hover:bg-slate-200`}
 >

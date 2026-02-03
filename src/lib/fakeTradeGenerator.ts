@@ -91,7 +91,7 @@ export function generateFakeTrades(config: {
     if (trades.length >= totalTrades) break;
 
     // Her gün 1–2 trade
-    const tradesToday = randomInt(1, 3);
+    const tradesToday = randomInt(1, 15);
 
     for (let i = 0; i < tradesToday; i++) {
       if (trades.length >= totalTrades) break;
