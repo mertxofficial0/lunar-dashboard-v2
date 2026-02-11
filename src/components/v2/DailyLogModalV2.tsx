@@ -194,7 +194,7 @@ useEffect(() => {
     cursor-pointer
     h-9
     w-9
-    mt-1
+    mt-0.5
 
     rounded-lg
     text-slate-700
@@ -213,18 +213,19 @@ useEffect(() => {
         {/* TOP SUMMARY */}
 <div className="px-3 py-3">
 
-          <div className="flex items-center gap-3 text-[13px]">
+          <div className="flex items-center gap-3 text-[14px]">
             <div className="font-semibold text-slate-700">{formatHeaderDate(date)}</div>
             <div className="text-slate-300">•</div>
-            <div className={`font-extrabold ${positive ? "text-emerald-700" : "text-rose-700"}`}>
+            <div className={`font-extrabold ${positive ? "text-[#0fa89a]" : "text-[#e1395f]"}`}>
               Net P&amp;L {formatUsd(stats.net)}
             </div>
           </div>
 
-          <div className="mt-2 grid grid-cols-12 gap-2.5 items-stretch">
-            <div className="col-span-12 md:col-span-4 rounded-xl border border-slate-200 bg-white p-2">
-  <MiniPnLAreaLite trades={trades} height={120} />
+          <div className="mt-3 grid grid-cols-12 gap-2.5 items-stretch">
+            <div className="col-span-12 md:col-span-4">
+  <MiniPnLAreaLite trades={trades} height={110} />
 </div>
+
 
 
             <div className="col-span-12 md:col-span-8 grid grid-cols-2 md:grid-cols-4 gap-2.5">
@@ -232,7 +233,13 @@ useEffect(() => {
               <TopStat label="Winners" value={stats.winners} />
               <TopStat label="Losers" value={stats.losers} />
               <TopStat label="Winrate" value={`${stats.winrate.toFixed(2)}%`} />
-              <TopStat label="Gross P&L" value={formatUsd(stats.gross)} strong />
+              <TopStat
+  label="Gross P&L"
+  value={formatUsd(stats.gross)}
+  strong
+  tone={stats.gross >= 0 ? "good" : "bad"}
+/>
+
               <TopStat label="Commissions" value={`$${stats.commissionAbs.toFixed(2)}`} />
               <TopStat label="Volume" value={Math.round(stats.volume).toLocaleString("en-US")} />
               <TopStat label="Profit Factor" value={stats.profitFactor.toFixed(2)} />
@@ -277,28 +284,54 @@ function TopStat({
   label,
   value,
   strong,
+  tone = "neutral",
 }: {
   label: string;
   value: React.ReactNode;
   strong?: boolean;
+  tone?: "good" | "bad" | "neutral";
 }) {
-  return (
-    <div className="rounded-xl border border-slate-200 bg-white px-2.5 py-2">
-      <div className="text-[10px] text-slate-500 font-semibold uppercase tracking-wide">
-        {label}
-      </div>
+  const toneClass =
+    tone === "good"
+      ? "text-[#0fa89a]"
+      : tone === "bad"
+      ? "text-[#e1395f]"
+      : "text-slate-900";
 
-      {/* 👇 sadece buraya ekledik */}
-      <div
-        className={`mt-2 text-[13px] tabular-nums ${
-          strong ? "font-extrabold" : "font-semibold"
-        } text-slate-900`}
-      >
-        {value}
+  const lineColor =
+    tone === "good"
+      ? "bg-[#0fa89a]/70"
+      : tone === "bad"
+      ? "bg-[#e1395f]/70"
+      : "bg-slate-300/60";
+
+  return (
+    <div className="px-3 py-2 flex items-center justify-between">
+      <div className="flex items-start gap-2">
+        {/* SOL ÇİZGİ */}
+        <span
+          className={`mt-1 w-[2px] h-[31px] rounded-full ${lineColor}`}
+        />
+
+        {/* TEXT */}
+        <div>
+          <div className="text-[11px] text-slate-500/80 font-medium tracking-wide">
+            {label}
+          </div>
+
+          <div
+            className={`text-[14px] tabular-nums ${
+              strong ? "font-extrabold" : "font-semibold"
+            } ${toneClass}`}
+          >
+            {value}
+          </div>
+        </div>
       </div>
     </div>
   );
 }
+
 
 
 

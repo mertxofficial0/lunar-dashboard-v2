@@ -1,4 +1,6 @@
-import React, { useMemo, useState, useCallback } from "react";
+import React, { useMemo, useState, useCallback, useEffect } from "react";
+import ViewportRender from "./ViewportRender";
+
 
 import CalendarMiniV2 from "./CalendarMiniV2";
 
@@ -7,6 +9,7 @@ import DailyLogModalV2 from "./DailyLogModalV2";
 import MiniPnLAreaLite from "./MiniPnLAreaLite";
 
 import { fakeTrades } from "../../lib/fakeTrades";
+
 
 
 /* ======================
@@ -125,20 +128,67 @@ export default function DailyJournalV2() {
 
   const selectedYear = calendarDate.getFullYear();
   const selectedMonth = calendarDate.getMonth();
+const [rangeStart, setRangeStart] = useState<string | null>(null);
+const [rangeEnd, setRangeEnd] = useState<string | null>(null);
+useEffect(() => {
+  setRangeStart(null);
+  setRangeEnd(null);
+}, [selectedYear, selectedMonth]);
 
-  const monthTrades = useMemo(() => {
-    return fakeTrades.filter((t) => {
-      const d = new Date(t.date);
-      return d.getFullYear() === selectedYear && d.getMonth() === selectedMonth;
-    });
-  }, [selectedYear, selectedMonth]);
+const handleSelectDate = useCallback((date: string) => {
 
-  const dayGroups = useMemo(() => groupTradesByDay(monthTrades), [monthTrades]);
+  // ✅ Eğer range tamamlanmışsa → RESET ONLY
+  if (rangeStart && rangeEnd) {
+    setRangeStart(null);
+    setRangeEnd(null);
+    return; // ❗ yeni seçim BAŞLAMAZ
+  }
+
+  // ✅ İlk tıklama → start
+  if (!rangeStart) {
+    setRangeStart(date);
+    return;
+  }
+
+  // ✅ İkinci tıklama → end
+  if (date < rangeStart) {
+    setRangeEnd(rangeStart);
+    setRangeStart(date);
+  } else {
+    setRangeEnd(date);
+  }
+
+}, [rangeStart, rangeEnd]);
+
+
+  const filteredTrades = useMemo(() => {
+  let trades = fakeTrades.filter((t) => {
+    const d = new Date(t.date);
+    return d.getFullYear() === selectedYear && d.getMonth() === selectedMonth;
+  });
+
+  // RANGE seçiliyse ekstra filtre
+  if (rangeStart && rangeEnd) {
+    trades = trades.filter(
+      (t) => t.date >= rangeStart && t.date <= rangeEnd
+    );
+  }
+
+  return trades;
+}, [selectedYear, selectedMonth, rangeStart, rangeEnd]);
+
+
+  const dayGroups = useMemo(
+  () => groupTradesByDay(filteredTrades),
+  [filteredTrades]
+);
+
 
   // Fast index: tradesByDay
   const tradesByDay = useMemo(() => {
     const map: Record<string, typeof fakeTrades> = {};
-    for (const t of monthTrades) {
+    for (const t of filteredTrades)
+ {
       (map[t.date] ||= []).push(t);
     }
     // Optional: stable order in day (by closeTime if exists)
@@ -150,7 +200,8 @@ export default function DailyJournalV2() {
       });
     }
     return map;
-  }, [monthTrades]);
+}, [filteredTrades]);
+
 
   // Controlled accordion state (corporate behavior)
   const [openDays, setOpenDays] = useState<Record<string, boolean>>({});
@@ -239,9 +290,10 @@ const saveLog = useCallback(
 
   // Top summary (optional)
   const monthNet = useMemo(
-    () => monthTrades.reduce((a, t) => a + t.pnlUsd, 0),
-    [monthTrades]
-  );
+  () => filteredTrades.reduce((a, t) => a + t.pnlUsd, 0),
+  [filteredTrades]
+);
+
 
   return (
     <div className="w-full overflow-x-hidden">
@@ -384,10 +436,10 @@ const saveLog = useCallback(
     d.setDate(1);
     setCalendarDate(d);
   }}
-  className="absolute left-0 p-1 text-slate-500 hover:text-slate-900 transition"
+  className="absolute left-0 p-1 text-slate-900 hover:text-slate-900 transition"
   aria-label="Previous month"
 >
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
     <path
       d="M15 6l-6 6 6 6"
       stroke="currentColor"
@@ -400,7 +452,7 @@ const saveLog = useCallback(
 
 
       {/* CENTER DATE */}
-      <div className="w-full text-center text-[12px] font-semibold text-slate-700">
+      <div className="w-full text-center text-[14px] font-semibold text-slate-900">
         {calendarDate.toLocaleDateString("en-US", {
           month: "long",
           year: "numeric",
@@ -415,10 +467,10 @@ const saveLog = useCallback(
     d.setDate(1);
     setCalendarDate(d);
   }}
-  className="absolute right-0 p-1 text-slate-500 hover:text-slate-900 transition"
+  className="absolute right-0 p-1 text-slate-900 hover:text-slate-900 transition"
   aria-label="Next month"
 >
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
     <path
       d="M9 18l6-6-6-6"
       stroke="currentColor"
@@ -435,9 +487,15 @@ const saveLog = useCallback(
 >
 
               <div className="w-full h-full">
-  <div className="w-full h-full flex items-start justify-center -mt-1">
+  <div className="w-full h-full flex items-start justify-center mt-3">
     <div className="w-[280px]">
-      <CalendarMiniV2 currentDate={calendarDate} />
+      <CalendarMiniV2
+  currentDate={calendarDate}
+  rangeStart={rangeStart}
+  rangeEnd={rangeEnd}
+  onSelectDate={handleSelectDate}
+/>
+
     </div>
   </div>
 </div>
@@ -556,9 +614,12 @@ const totalRisk = trades.reduce((s, t) => s + (t.riskUsd ?? 0), 0);
     </div>
 
     {/* MINI CHART + STATS (HER ZAMAN GÖRÜNÜR) */}
-    <div className="mt-1 grid grid-cols-12 gap-3">
+    <div className="mt-5 grid grid-cols-12 gap-3">
       <div className="col-span-12 lg:col-span-2">
-        <MiniPnLAreaLite trades={trades} />
+        <ViewportRender height={110}>
+  <MiniPnLAreaLite trades={trades} />
+</ViewportRender>
+
 
 
 
@@ -567,7 +628,7 @@ const totalRisk = trades.reduce((s, t) => s + (t.riskUsd ?? 0), 0);
       </div>
 
       <div className="col-span-12 lg:col-span-10">
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 -mt-2">
           <MiniStat label="Total Trades" value={group.tradeCount} />
           <MiniStat label="Winners" value={group.winners} />
           <MiniStat label="Losers" value={group.losers} />
@@ -578,7 +639,7 @@ const totalRisk = trades.reduce((s, t) => s + (t.riskUsd ?? 0), 0);
           />
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-3">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-4">
           <MiniStat label="Win Rate" value={`${winRate.toFixed(1)}%`} />
           <MiniStat label="Profit Factor" value={profitFactor.toFixed(2)} />
           <MiniStat
@@ -614,38 +675,54 @@ const totalRisk = trades.reduce((s, t) => s + (t.riskUsd ?? 0), 0);
             No trades on this day.
           </div>
         ) : (
-          <div className="rounded-lg border border-slate-200 overflow-hidden">
-            <div className="grid grid-cols-18 bg-slate-200/60 text-[10.5px] font-semibold px-3 py-2">
-              <div className="col-span-2">Open Time</div>
-              <div className="col-span-2">Ticker</div>
-              <div className="col-span-2">Direction</div>
-              <div className="col-span-3">Entry → Exit</div>
-              <div className="col-span-2">Volume</div>
-              <div className="col-span-2">PnL</div>
-              <div className="col-span-2">Net ROI</div>
-              <div className="col-span-2">Duration</div>
-              <div className="col-span-1 text-right">Result</div>
-            </div>
+          <div className="rounded-lg overflow-hidden">
 
-            <div className="divide-y divide-slate-200">
+            <div className="rounded-md bg-violet-50 px-3 py-2.5 text-[12px] font-bold">
+  <div className="grid grid-cols-18 text-slate-900">
+    <div className="col-span-2">Open Time</div>
+<div className="col-span-2">Ticker</div>
+<div className="col-span-2">Direction</div>
+<div className="col-span-3">Entry → Exit</div>
+<div className="col-span-2">Volume</div>
+<div className="col-span-2">PnL</div>
+<div className="col-span-2">Net ROI</div>
+<div className="col-span-1">Realized R</div>
+<div className="col-span-1">Duration</div>
+<div className="col-span-1 text-right">Result</div>
+
+
+
+  </div>
+</div>
+          
+
+
+            <div className="divide-y divide-slate-200/80">
               {trades.map((t) => {
                 const pnlPos = t.pnlUsd >= 0;
+const realizedR =
+  t.riskUsd && t.riskUsd > 0
+    ? t.pnlUsd / t.riskUsd
+    : null;
 
                 return (
                   <div
-                    key={t.id}
-                    className="grid grid-cols-18 px-3 py-2 text-[12px] hover:bg-slate-50"
-                  >
+  key={t.id}
+  className="grid grid-cols-18 px-3 py-2 text-[12px]  text-slate-800  hover:bg-slate-50"
+>
                     <div className="col-span-2">{t.raw.openTime.slice(11, 19)}</div>
                     <div className="col-span-2">{t.symbol}</div>
                     <div className="col-span-2">
-                      <span className={`px-2 py-0.5 rounded-md text-[11px] font-semibold ${
-                        t.direction === "long"
-                          ? "bg-emerald-100 text-[#0fa89a]"
-                          : "bg-rose-100 text-[#e1395f]"
-                      }`}>
-                        {t.direction.toUpperCase()}
-                      </span>
+                      <span
+  className={`text-[12px]  ${
+    t.direction === "long"
+      ? "text-slate-800"
+      : "text-slate-800"
+  }`}
+>
+  {t.direction.toUpperCase()}
+</span>
+
                     </div>
                     <div className="col-span-3">
                       {formatNum(t.entry)} → {formatNum(t.exit)}
@@ -653,20 +730,26 @@ const totalRisk = trades.reduce((s, t) => s + (t.riskUsd ?? 0), 0);
                     <div className="col-span-2">
                       ${formatNum(Math.round(t.riskUsd))}
                     </div>
-                    <div className={`col-span-2 font-semibold ${
+                    <div className={`col-span-2  ${
                       pnlPos ? "text-[#0fa89a]" : "text-[#e1395f]"
                     }`}>
                       {formatUsd(t.pnlUsd)}
                     </div>
+                    
                     <div className="col-span-2">
                       {(() => {
                         const pct = calcTradeNetRoiPct(t);
                         return pct === null ? "--" : formatPct(pct);
                       })()}
                     </div>
-                    <div className="col-span-2">
-                      {calcDuration(t.raw.openTime, t.raw.closeTime)}
-                    </div>
+                    <div className="col-span-1 text-slate-700">
+  {realizedR === null ? "--" : `${realizedR.toFixed(2)}R`}
+</div>
+
+<div className="col-span-1">
+  {calcDuration(t.raw.openTime, t.raw.closeTime)}
+</div>
+
                     <div className="col-span-1 text-right">
                       {t.result.toUpperCase()}
                     </div>
@@ -777,15 +860,40 @@ function MiniStat({
 
 
   return (
-  <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 flex items-center justify-between">
+  <div className="px-3 py-3 flex items-center justify-between">
+
+  <div className="flex items-start gap-2">
+    
+    {/* SOL ÇİZGİ */}
+    <span
+  className={`
+    mt-1
+    w-[2px]
+    h-[30px]
+    rounded-full
+    ${
+      tone === "good"
+        ? "bg-[#0fa89a]/70"
+        : tone === "bad"
+        ? "bg-[#e1395f]/70"
+        : "bg-slate-300/60"
+    }
+  `}
+/>
+
+
+    {/* TEXT */}
     <div>
-      <div className="text-[10px] text-slate-500 font-semibold uppercase tracking-wide">
-        {label}
-      </div>
-      <div className={`text-[13px] font-semibold tabular-nums ${toneClass}`}>
+      <div className="text-[11px] text-slate-500/80 font-medium tracking-wide">
+  {label}
+</div>
+
+      <div className={`text-[14px] font-semibold tabular-nums ${toneClass}`}>
         {value}
       </div>
     </div>
+  </div>
+
 
     {direction === "up" && (
   <div className="text-[#0fa89a]">
@@ -846,13 +954,16 @@ function Card({
   height?: string;
 }) {
   return (
-    <div className="bg-white rounded-xl p-4 shadow-[0_1px_1px_rgba(0,0,0,0.03)]">
-      <div className="h-[12px] flex items-center text-[12px] font-semibold text-slate-700">
+    <div className="bg-white rounded-xl p-3 shadow-[0_1px_1px_rgba(0,0,0,0.03)]">
+
+      <div className="h-[30px] flex items-center text-[12px] font-semibold text-slate-700">
         {title}
       </div>
 
-      <div className="relative -mx-5 mt-3 mb-3">
-        <div className="h-px bg-slate-200 mx-1" />
+     <div className="relative mt-2 mb-2">
+
+
+        
       </div>
 
       {/* height verilirse uygula, verilmezse içerik kadar olsun */}

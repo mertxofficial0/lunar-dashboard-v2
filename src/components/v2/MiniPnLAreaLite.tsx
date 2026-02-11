@@ -13,15 +13,28 @@ function fmtUsdCompact(v: number) {
   return `${sign}$${abs.toFixed(0)}`;
 }
 
-function smoothPath(points: { x: number; y: number }[]) {
+
+ 
+function smoothPathNatural(points: { x: number; y: number }[]) {
   if (points.length < 2) return "";
+
   let d = `M ${points[0].x} ${points[0].y}`;
-  for (let i = 1; i < points.length; i++) {
-    const p0 = points[i - 1];
+
+  for (let i = 0; i < points.length - 1; i++) {
+    const p0 = points[i - 1] || points[i];
     const p1 = points[i];
-    const cx = (p0.x + p1.x) / 2;
-    d += ` Q ${cx} ${p0.y} ${p1.x} ${p1.y}`;
+    const p2 = points[i + 1];
+    const p3 = points[i + 2] || p2;
+
+    const cx1 = p1.x + (p2.x - p0.x) / 8;
+    const cy1 = p1.y + (p2.y - p0.y) / 8;
+
+    const cx2 = p2.x - (p3.x - p1.x) / 8;
+    const cy2 = p2.y - (p3.y - p1.y) / 8;
+
+    d += ` C ${cx1} ${cy1}, ${cx2} ${cy2}, ${p2.x} ${p2.y}`;
   }
+
   return d;
 }
 
@@ -60,16 +73,23 @@ export default function MiniPnLAreaLite({
 }) {
   const gid = useId();
 
-  const { line, area, labels, zeroY, positive } = useMemo(() => {
+  const { area, labels, zeroY, showZeroLine, linePath } = useMemo(() => {
+
+
+
+
+console.log("Chart render");
+
+
     if (!trades || trades.length === 0) {
-      return {
-        line: "",
-        area: "",
-        labels: [0],
-        zeroY: 100,
-        positive: true,
-      };
-    }
+  return {
+    segments: [],
+    area: "",
+    labels: [0],
+    zeroY: 100,
+  };
+}
+
 
     // ⏱️ zaman sırası
     const sorted = [...trades].sort((a: any, b: any) => {
@@ -106,6 +126,7 @@ export default function MiniPnLAreaLite({
     }
 
     const range = hi - lo || 1;
+const showZeroLine = lo < 0 && hi > 0;
 
     // 🟢 0 çizgisi (gerekliyse)
     const zeroY = hi === 0
@@ -115,12 +136,32 @@ export default function MiniPnLAreaLite({
       : 100 - ((0 - lo) / range) * 100;
 
     // 📍 noktalar
-    const points = values.map((v, i) => ({
-      x: (i / (values.length - 1)) * 100,
-      y: 100 - ((v - lo) / range) * 100,
-    }));
+    const points: { x: number; y: number; v: number }[] = [];
 
-    const linePath = smoothPath(points);
+for (let i = 0; i < values.length; i++) {
+  const v = values[i];
+  const prev = values[i - 1];
+
+  const x = (i / (values.length - 1)) * 100;
+  const y = 100 - ((v - lo) / range) * 100;
+
+  // 👉 0 kesişimi varsa ARAYA EKLE
+  if (prev !== undefined && (prev > 0 && v < 0 || prev < 0 && v > 0)) {
+  const t = prev / (prev - v);
+  const ix = ((i - 1 + t) / (values.length - 1)) * 100;
+  const iy = 100 - ((0 - lo) / range) * 100;
+
+  points.push({ x: ix, y: iy, v: 0 });
+}
+
+
+
+  points.push({ x, y, v });
+}
+
+
+    const linePath = smoothPathNatural(points);
+
 
     const areaPath =
       linePath +
@@ -128,12 +169,58 @@ export default function MiniPnLAreaLite({
       ` L ${points[0].x} ${zeroY} Z`;
 
     const labels = buildLabelsSmart(lo, hi);
-    const positive = values[values.length - 1] >= 0;
+    
 
-    return { line: linePath, area: areaPath, labels, zeroY, positive };
+    const segments: {
+  d: string;
+  positive: boolean;
+  startX: number;
+  endX: number;
+}[] = [];
+
+
+let current: { x: number; y: number }[] = [];
+
+for (let i = 0; i < points.length; i++) {
+  current.push({ x: points[i].x, y: points[i].y });
+
+
+ const curr = points[i].v;
+const next = points[i + 1]?.v;
+
+
+  const crossedZero =
+    next !== undefined &&
+    ((curr >= 0 && next < 0) || (curr < 0 && next >= 0));
+
+  if (crossedZero || i === points.length - 1) {
+    segments.push({
+  d: smoothPathNatural(current),
+  positive: curr >= 0,
+  startX: current[0].x,
+  endX: current[current.length - 1].x,
+});
+
+    current = [points[i]];
+  }
+}
+
+return {
+  segments,
+  area: areaPath,
+  labels,
+  zeroY,
+  points,
+  showZeroLine,
+  linePath, 
+};
+
+
+
+
   }, [trades]);
 
-  const color = positive ? "#14b8a6" : "#ef4444";
+  
 
   return (
     <div className="flex items-stretch gap-2" style={{ height }}>
@@ -145,13 +232,29 @@ export default function MiniPnLAreaLite({
       </div>
 
       {/* CHART */}
-      <div className="flex-1 rounded-lg border border-slate-200 bg-white overflow-hidden">
+      <div className="flex-1 rounded-lg  bg-white overflow-hidden">
         <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full">
           <defs>
-            <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={color} stopOpacity="0.45" />
-              <stop offset="100%" stopColor={color} stopOpacity="0.05" />
-            </linearGradient>
+            <linearGradient id={`${gid}-green`} x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0%" stopColor="#14b8a6" stopOpacity="0.45" />
+  <stop offset="100%" stopColor="#14b8a6" stopOpacity="0.05" />
+</linearGradient>
+
+<linearGradient id={`${gid}-red`} x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0%" stopColor="#ef4444" stopOpacity="0.45" />
+  <stop offset="100%" stopColor="#ef4444" stopOpacity="0.05" />
+</linearGradient>
+<mask id={`${gid}-pos-mask`}>
+  {/* 0 çizgisinin ÜSTÜ: pozitif */}
+  <rect x="0" y="0" width="100" height={zeroY} fill="white" />
+</mask>
+
+<mask id={`${gid}-neg-mask`}>
+  {/* 0 çizgisinin ALTI: negatif */}
+  <rect x="0" y={zeroY} width="100" height={100 - zeroY} fill="white" />
+</mask>
+
+
           </defs>
 
           {/* GRID */}
@@ -181,35 +284,65 @@ export default function MiniPnLAreaLite({
           ))}
 
           {/* ZERO LINE */}
-          {(labels.includes(0)) && (
-            <line
-  x1="0"
-  y1={zeroY}
-  x2="100"
-  y2={zeroY}
-  stroke="#b5bac0ff"           // slate-300 (çok soft)
-  strokeWidth="1"
-  strokeDasharray="4 4"      // dotted
+          {showZeroLine && (
+  <line
+    x1="0"
+    y1={zeroY}
+    x2="100"
+    y2={zeroY}
+    stroke="#b5bac0ff"
+    strokeWidth="1"
+    strokeDasharray="4 4"
+    strokeLinecap="round"
+    vectorEffect="non-scaling-stroke"
+  />
+)}
+
+
+          {/* AREA */}
+<path
+  d={area}
+  fill={`url(#${gid}-green)`}
+  mask={`url(#${gid}-pos-mask)`}
+  opacity="1"
+/>
+<path
+  d={area}
+  fill={`url(#${gid}-red)`}
+  mask={`url(#${gid}-neg-mask)`}
+  opacity="1"
+/>
+
+
+
+
+          {/* LINE (tek path, mask ile iki renk) */}
+<path
+  d={linePath}
+  fill="none"
+  stroke="#14b8a6"
+  strokeWidth="1.8"
   strokeLinecap="round"
+  strokeLinejoin="round"
+  mask={`url(#${gid}-pos-mask)`}
+  vectorEffect="non-scaling-stroke"
+/>
+
+<path
+  d={linePath}
+  fill="none"
+  stroke="#ef4444"
+  strokeWidth="1.8"
+  strokeLinecap="round"
+  strokeLinejoin="round"
+  mask={`url(#${gid}-neg-mask)`}
   vectorEffect="non-scaling-stroke"
 />
 
 
-          )}
 
-          {/* AREA */}
-          <path d={area} fill={`url(#${gid})`} />
 
-          {/* LINE */}
-          <path
-            d={line}
-            fill="none"
-            stroke={color}
-            strokeWidth="2.2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            vectorEffect="non-scaling-stroke"
-          />
+
         </svg>
       </div>
     </div>
