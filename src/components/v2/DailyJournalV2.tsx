@@ -1005,14 +1005,7 @@ function Chevron({ open }: { open: boolean }) {
   );
 }
 
-function EmptyState({ title, desc }: { title: string; desc: string }) {
-  return (
-    <div className="rounded-xl border border-slate-200 bg-white p-6 text-center">
-      <div className="text-[14px] font-semibold text-slate-900">{title}</div>
-      <div className="mt-1 text-[12px] text-slate-500">{desc}</div>
-    </div>
-  );
-}
+
 
 /* UI */
 function Card({
