@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useCallback, useEffect } from "react";
 import ViewportRender from "./ViewportRender";
 
+import NoTradesImg from "../../assets/no-trades.svg";
 
 import CalendarMiniV2 from "./CalendarMiniV2";
 
@@ -388,11 +389,25 @@ const saveLog = useCallback(
           <div className="col-span-12 lg:col-span-10">
   <div className="space-y-3">
     {dayGroups.length === 0 && (
-      <EmptyState
-        title="No trades for this month"
-        desc="Takvimden farklı bir ay seç veya fake trade generator ayarlarını değiştir."
-      />
-    )}
+  <div className="flex flex-col items-center justify-center py-20">
+
+    <img
+      src={NoTradesImg}
+      alt="No trades"
+      className="w-75 mb-6 opacity-90 select-none pointer-events-none"
+    />
+
+    <h2 className="text-[15px] font-semibold text-slate-700">
+     No trades this month
+
+    </h2>
+
+    <p className="text-[13px] text-slate-500 mt-1 ">
+      There is no trading activity for the selected month.
+    </p>
+  </div>
+)}
+
 
     {dayGroups.map((g) => (
       <DayAccordionRow
