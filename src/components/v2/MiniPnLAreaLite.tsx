@@ -78,7 +78,7 @@ export default function MiniPnLAreaLite({
 
 
 
-console.log("Chart render");
+
 
 
     if (!trades || trades.length === 0) {
@@ -232,7 +232,8 @@ return {
       </div>
 
       {/* CHART */}
-      <div className="flex-1 rounded-lg  bg-white overflow-hidden">
+      <div className="flex-1 rounded-lg bg-white overflow-hidden will-change-transform">
+
         <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full">
           <defs>
             <linearGradient id={`${gid}-green`} x1="0" y1="0" x2="0" y2="1">

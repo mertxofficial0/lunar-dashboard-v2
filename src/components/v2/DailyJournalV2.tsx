@@ -383,10 +383,10 @@ const saveLog = useCallback(
         </div>
 
         {/* MAIN GRID */}
-        <div className="grid grid-cols-12 gap-3">
+        <div className="grid grid-cols-12 gap-4">
           {/* LEFT: DAY LIST */}
           <div className="col-span-12 lg:col-span-10">
-  <div className="space-y-2">
+  <div className="space-y-3">
     {dayGroups.length === 0 && (
       <EmptyState
         title="No trades for this month"
@@ -529,6 +529,10 @@ function DayAccordionRow({
   hasNote: boolean;
   onOpenNote: () => void;
 }) {
+const MAX_ROWS = 10;
+const ROW_HEIGHT = 40; // satır yüksekliği (ortalama)
+
+
 
   
   const positive = group.netPnl >= 0;
@@ -557,11 +561,12 @@ const totalRisk = trades.reduce((s, t) => s + (t.riskUsd ?? 0), 0);
 
  
  return (
-  <div className="bg-white rounded-xl px-3 py-3 pt-1 shadow-[0_1px_1px_rgba(0,0,0,0.03)]">
+  <div className="bg-white rounded-xl px-3 py-3 pt-1 shadow-[0_1px_1px_rgba(0,0,0,0.03)] will-change-transform">
+
 
     {/* HEADER */}
     <div className="flex items-center justify-between min-h-[44px] py-1">
-      <button onClick={onToggle} className="flex items-center gap-3 text-left">
+      <button onClick={onToggle} className="flex items-center gap-3 text-left cursor-pointer">
         <Chevron open={open} />
 
         <div className="flex items-center gap-3">
@@ -570,7 +575,7 @@ const totalRisk = trades.reduce((s, t) => s + (t.riskUsd ?? 0), 0);
             <span className="ml-2 -mr-0.5 text-slate-300">•</span>
           </div>
 
-          <div className="text-[14px] font-semibold flex items-center">
+          <div className="text-[14.5px] font-semibold flex items-center">
             <span className={`mr-1.5 ${positive ? "text-[#0fa89a]" : "text-[#e1395f]"}`}>
               Net P&L
             </span>
@@ -588,25 +593,34 @@ const totalRisk = trades.reduce((s, t) => s + (t.riskUsd ?? 0), 0);
     onOpenNote();
   }}
   className={`
-    h-8
-    px-3.5
-    rounded-lg
-    flex
-    items-center
-    gap-1.5
-    text-[11px]
-    font-medium
-    transition
-    cursor-pointer
-    ${
-      hasNote
-        ? "bg-slate-200/80 text-slate-600 hover:bg-slate-300/70"
-        : "bg-violet-200/80   text-violet-500 hover:bg-violet-300/70"
-    }
-  `}
+  h-8.5 px-2.5
+  rounded-lg
+  flex items-center gap-2
+  text-[12px] font-medium
+  border transition-colors
+  cursor-pointer
+  ${
+    hasNote
+      ? `
+        bg-white
+        text-slate-600
+        border-slate-200
+        hover:bg-slate-50
+      `
+      : `
+        bg-white
+        text-violet-500
+        border-violet-200
+        hover:bg-violet-100/40
+      `
+  }
+`}
+
+
 >
-  <JournalNotebookIcon />
-  <span>{hasNote ? "View Note" : "Add Note"}</span>
+  {hasNote ? <JournalNotebookIcon /> : <AddNoteIcon />}
+<span>{hasNote ? "View Note" : "Add Note"}</span>
+
 </button>
 
 
@@ -666,102 +680,122 @@ const totalRisk = trades.reduce((s, t) => s + (t.riskUsd ?? 0), 0);
     </div>
 
     {/* TRADE LIST (SADECE AÇIKKEN) */}
-    {open && (
-      <div className="mt-3">
-        
-
-        {trades.length === 0 ? (
-          <div className="text-[12px] text-slate-500">
-            No trades on this day.
-          </div>
-        ) : (
-          <div className="rounded-lg overflow-hidden">
-
-            <div className="rounded-md bg-violet-50 px-3 py-2.5 text-[12px] font-bold">
-  <div className="grid grid-cols-18 text-slate-900">
-    <div className="col-span-2">Open Time</div>
-<div className="col-span-2">Ticker</div>
-<div className="col-span-2">Direction</div>
-<div className="col-span-3">Entry → Exit</div>
-<div className="col-span-2">Volume</div>
-<div className="col-span-2">PnL</div>
-<div className="col-span-2">Net ROI</div>
-<div className="col-span-1">Realized R</div>
-<div className="col-span-1">Duration</div>
-<div className="col-span-1 text-right">Result</div>
+    {/* TRADE LIST (SADECE AÇIKKEN) */}
+{open && (
+  <div className="mt-3">
 
 
-
-  </div>
-</div>
-          
-
-
-            <div className="divide-y divide-slate-200/80">
-              {trades.map((t) => {
-                const pnlPos = t.pnlUsd >= 0;
-const realizedR =
-  t.riskUsd && t.riskUsd > 0
-    ? t.pnlUsd / t.riskUsd
-    : null;
-
-                return (
-                  <div
-  key={t.id}
-  className="grid grid-cols-18 px-3 py-2 text-[12px]  text-slate-800  hover:bg-slate-50"
+    {trades.length === 0 ? (
+      <div className="text-[12px] text-slate-500">
+        No trades on this day.
+      </div>
+    ) : (
+      <div
+  className="rounded-lg overflow-hidden overflow-y-auto"
+  style={{
+    maxHeight: `${MAX_ROWS * ROW_HEIGHT}px`,
+  }}
 >
-                    <div className="col-span-2">{t.raw.openTime.slice(11, 19)}</div>
-                    <div className="col-span-2">{t.symbol}</div>
-                    <div className="col-span-2">
-                      <span
-  className={`text-[12px]  ${
-    t.direction === "long"
-      ? "text-slate-800"
-      : "text-slate-800"
-  }`}
->
-  {t.direction.toUpperCase()}
-</span>
 
-                    </div>
-                    <div className="col-span-3">
-                      {formatNum(t.entry)} → {formatNum(t.exit)}
-                    </div>
-                    <div className="col-span-2">
-                      ${formatNum(Math.round(t.riskUsd))}
-                    </div>
-                    <div className={`col-span-2  ${
-                      pnlPos ? "text-[#0fa89a]" : "text-[#e1395f]"
-                    }`}>
-                      {formatUsd(t.pnlUsd)}
-                    </div>
-                    
-                    <div className="col-span-2">
-                      {(() => {
-                        const pct = calcTradeNetRoiPct(t);
-                        return pct === null ? "--" : formatPct(pct);
-                      })()}
-                    </div>
-                    <div className="col-span-1 text-slate-700">
-  {realizedR === null ? "--" : `${realizedR.toFixed(2)}R`}
-</div>
 
-<div className="col-span-1">
-  {calcDuration(t.raw.openTime, t.raw.closeTime)}
-</div>
+        {/* HEADER */}
+        <div className="
+  sticky top-0 z-20
+  bg-slate-200/60
+  px-3 py-2
+  text-[12px]
+  font-bold
+  rounded-md
+  backdrop-blur-sm
+">
 
-                    <div className="col-span-1 text-right">
-                      {t.result.toUpperCase()}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+
+          <div className="grid grid-cols-18 text-slate-900">
+            <div className="col-span-2">Open Time</div>
+            <div className="col-span-2">Ticker</div>
+            <div className="col-span-2">Direction</div>
+            <div className="col-span-3">Entry → Exit</div>
+            <div className="col-span-2">Volume</div>
+            <div className="col-span-2">PnL</div>
+            <div className="col-span-2">Net ROI</div>
+            <div className="col-span-1">Realized R</div>
+            <div className="col-span-1">Duration</div>
+            <div className="col-span-1 text-right">Result</div>
           </div>
-        )}
+        </div>
+
+        {/* ROWS */}
+        <div className="divide-y divide-slate-200/80">
+          {trades.map((t) => {
+            const pnlPos = t.pnlUsd >= 0;
+            const realizedR =
+              t.riskUsd && t.riskUsd > 0
+                ? t.pnlUsd / t.riskUsd
+                : null;
+
+            return (
+              <div
+                key={t.id}
+                className="grid grid-cols-18 px-3 py-2 text-[12px] text-slate-800 hover:bg-slate-50"
+              >
+                <div className="col-span-2">
+                  {t.raw.openTime.slice(11, 19)}
+                </div>
+
+                <div className="col-span-2">{t.symbol}</div>
+
+                <div className="col-span-2">
+                  {t.direction.toUpperCase()}
+                </div>
+
+                <div className="col-span-3">
+                  {formatNum(t.entry)} → {formatNum(t.exit)}
+                </div>
+
+                <div className="col-span-2">
+                  ${formatNum(Math.round(t.riskUsd))}
+                </div>
+
+                <div
+                  className={`col-span-2 ${
+                    pnlPos ? "text-[#0fa89a]" : "text-[#e1395f]"
+                  }`}
+                >
+                  {formatUsd(t.pnlUsd)}
+                </div>
+
+                <div className="col-span-2">
+                  {(() => {
+                    const pct = calcTradeNetRoiPct(t);
+                    return pct === null ? "--" : formatPct(pct);
+                  })()}
+                </div>
+
+                <div className="col-span-1">
+                  {realizedR === null
+                    ? "--"
+                    : `${realizedR.toFixed(2)}R`}
+                </div>
+
+                <div className="col-span-1">
+                  {calcDuration(t.raw.openTime, t.raw.closeTime)}
+                </div>
+
+                <div className="col-span-1 text-right">
+                  {t.result.toUpperCase()}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     )}
   </div>
+)}
+
+
+  </div>
+  
 );
 
 }
@@ -793,6 +827,28 @@ function JournalNotebookIcon() {
       {/* note lines */}
       <path d="M7.5 11h8" />
       <path d="M7.5 14.5h5" />
+    </svg>
+  );
+}
+
+
+function AddNoteIcon() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.9"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {/* pencil */}
+      <path d="M4 20h4l10-10a2 2 0 10-4-4L4 16v4z" />
+
+      {/* pencil tip detail */}
+      <path d="M13.5 6.5l4 4" />
     </svg>
   );
 }

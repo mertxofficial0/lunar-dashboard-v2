@@ -911,12 +911,13 @@ useEffect(() => {
       <div
   className="flex-1 min-h-0 overflow-y-auto p-4 editor-scroll cursor-text"
   onMouseDown={(e) => {
-    // boş alana tıklanınca editöre focus ver
-    if (ref.current && e.target === e.currentTarget) {
-      e.preventDefault();
-      ref.current.focus();
-    }
-  }}
+  if (ref.current && e.target === e.currentTarget) {
+-   e.preventDefault();
+    ref.current.focus();
+  }
+}}
+
+
 >
 
 
@@ -944,7 +945,8 @@ useEffect(() => {
   }
 }}
 
-  className="outline-none text-[13px] text-slate-800 leading-6"
+  className="outline-none text-[13px] text-slate-800 leading-6 min-h-full block"
+
   data-placeholder={placeholder}
 />
 
